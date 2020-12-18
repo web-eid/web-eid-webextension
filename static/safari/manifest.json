@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "default_locale": "en",
+  "name": "Web eID",
+  "description": "The Web eID extension enables usage of European Union electronic identity smart cards for secure authentication and digital signing of documents on the web using public-key cryptography.",
+  "version": "{{package.version}}",
+  "icons": {
+    "128": "web-eid-poc-icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "content.js"
+      ],
+      "matches": [
+        "*://*/*"
+      ]
+    }
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "permissions": [
+    "*://*/*",
+    "nativeMessaging"
+  ]
+}
