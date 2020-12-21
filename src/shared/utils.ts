@@ -23,23 +23,6 @@
 import TypedMap from "../models/TypedMap";
 
 /**
- * Encode an array of bytes to a Base64 encoded string.
- *
- * @param byteArray Array of bytes to encode
- *
- * @returns The Base64 encoded string
- *
- * @example
- *   toBase64([72, 101, 108, 111])
- *   // =>  "SGVsbG8="
- */
-export function toBase64(byteArray: number[]): string {
-  return btoa(
-    byteArray.reduce((acc, curr) => acc += String.fromCharCode(curr), "")
-  );
-}
-
-/**
  * Transforms the Fetch API Header object to plain JSON.stringify-able object type.
  *
  * @param headers Fetch API Headers object

@@ -20,12 +20,7 @@
  * SOFTWARE.
  */
 
-export default Object.freeze({
-  NATIVE_APP_NAME: "eu.webeid",
-  VERSION:         "{{package.version}}",
-
-  NATIVE_MESSAGE_MAX_BYTES: 8192,
-
-  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  true,
-  TOKEN_SIGNING_USER_INTERACTION_TIMEOUT: 1000 * 60 * 5, // 5 minutes
-});
+export default interface TokenSigningPromise {
+  resolve: (value?: any) => void;
+  reject: (reason?: any) => void;
+}

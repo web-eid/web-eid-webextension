@@ -20,12 +20,19 @@
  * SOFTWARE.
  */
 
-export default Object.freeze({
-  NATIVE_APP_NAME: "eu.webeid",
-  VERSION:         "{{package.version}}",
+import ErrorCode from "@web-eid/web-eid-library/errors/ErrorCode";
+import { serializeError } from "@web-eid/web-eid-library/utils/errorSerializer";
+import { TokenSigningErrorResponse } from "../../../models/TokenSigning/TokenSigningResponse";
+import tokenSigningResponse from "../../../shared/tokenSigningResponse";
 
-  NATIVE_MESSAGE_MAX_BYTES: 8192,
+export default function errorToResponse(nonce: string, error: any): TokenSigningErrorResponse {
+  if (error.code === ErrorCode.ERR_WEBEID_USER_CANCELLED) {
+    return tokenSigningResponse<TokenSigningErrorResponse>("user_cancel", nonce);
+  } else if (error.code === ErrorCode.ERR_WEBEID_NATIVE_FATAL) {
+    const nativeException = serializeError(error);
 
-  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  true,
-  TOKEN_SIGNING_USER_INTERACTION_TIMEOUT: 1000 * 60 * 5, // 5 minutes
-});
+    return tokenSigningResponse<TokenSigningErrorResponse>("driver_error", nonce, { nativeException });
+  } else {
+    return tokenSigningResponse<TokenSigningErrorResponse>("technical_error", nonce, { error });
+  }
+}

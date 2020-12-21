@@ -31,7 +31,8 @@ import NativeAppService from "../services/NativeAppService";
 import WebServerService from "../services/WebServerService";
 import TypedMap from "../../models/TypedMap";
 import HttpResponse from "../../models/HttpResponse";
-import { toBase64, pick, throwAfterTimeout, isSameOrigin } from "../../shared/utils";
+import { pick, throwAfterTimeout, isSameOrigin } from "../../shared/utils";
+import ByteArray from "../../shared/ByteArray";
 
 export default async function authenticate(
   getAuthChallengeUrl: string,
@@ -89,7 +90,7 @@ export default async function authenticate(
 
           "origin-cert": (
             response.certificateInfo?.rawDER
-              ? toBase64(response.certificateInfo?.rawDER)
+              ? new ByteArray(response.certificateInfo?.rawDER).toBase64()
               : null
           ),
         },

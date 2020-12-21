@@ -20,12 +20,31 @@
  * SOFTWARE.
  */
 
-export default Object.freeze({
-  NATIVE_APP_NAME: "eu.webeid",
-  VERSION:         "{{package.version}}",
+export type TokenSigningMessage
+  = TokenSigningGetCertificateMessage
+  | TokenSigningSignMessage
+  | TokenSigningVersionMessage;
 
-  NATIVE_MESSAGE_MAX_BYTES: 8192,
+export interface TokenSigningMessageBase {
+  src: "page.js";
+  nonce: string;
+}
 
-  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  true,
-  TOKEN_SIGNING_USER_INTERACTION_TIMEOUT: 1000 * 60 * 5, // 5 minutes
-});
+export interface TokenSigningGetCertificateMessage extends TokenSigningMessageBase {
+  type: "CERT";
+  lang?: string;
+  filter?: "AUTH" | "SIGN";
+}
+
+export interface TokenSigningSignMessage extends TokenSigningMessageBase {
+  type: "SIGN";
+  cert: string;
+  hash: string;
+  hashtype: string;
+  lang?: string;
+  info?: string;
+}
+
+export interface TokenSigningVersionMessage extends TokenSigningMessageBase {
+  type: "VERSION";
+}

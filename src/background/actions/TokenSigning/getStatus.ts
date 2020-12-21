@@ -20,12 +20,32 @@
  * SOFTWARE.
  */
 
-export default Object.freeze({
-  NATIVE_APP_NAME: "eu.webeid",
-  VERSION:         "{{package.version}}",
+import NativeAppService from "../../services/NativeAppService";
+import tokenSigningResponse from "../../../shared/tokenSigningResponse";
+import {
+  TokenSigningErrorResponse,
+  TokenSigningStatusResponse,
+} from "../../../models/TokenSigning/TokenSigningResponse";
+import errorToResponse from "./errorToResponse";
 
-  NATIVE_MESSAGE_MAX_BYTES: 8192,
+export default async function getStatus(
+  nonce: string,
+): Promise<TokenSigningStatusResponse | TokenSigningErrorResponse> {
 
-  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  true,
-  TOKEN_SIGNING_USER_INTERACTION_TIMEOUT: 1000 * 60 * 5, // 5 minutes
-});
+  try {
+    const nativeAppService = new NativeAppService();
+    const nativeAppStatus  = await nativeAppService.connect();
+
+    // The token-signing uses x.y.z.build version string pattern
+    const version = nativeAppStatus.version.replace("+", ".");
+
+    if (!version) {
+      throw new Error("missing native application version");
+    }
+
+    return tokenSigningResponse<TokenSigningStatusResponse>("ok", nonce, { version });
+  } catch (error) {
+    console.error(error);
+    return errorToResponse(nonce, error);
+  }
+}

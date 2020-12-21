@@ -20,12 +20,28 @@
  * SOFTWARE.
  */
 
-export default Object.freeze({
-  NATIVE_APP_NAME: "eu.webeid",
-  VERSION:         "{{package.version}}",
+import TypedMap from "../models/TypedMap";
+import config from "../config";
+import {
+  TokenSigningResponse,
+  TokenSigningResult,
+} from "../models/TokenSigning/TokenSigningResponse";
 
-  NATIVE_MESSAGE_MAX_BYTES: 8192,
+export default function tokenSigningResponse<T extends TokenSigningResponse>(
+  result: TokenSigningResult,
+  nonce: string,
+  optional?: TypedMap<any>
+): T {
+  const response = {
+    nonce,
+    result,
 
-  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  true,
-  TOKEN_SIGNING_USER_INTERACTION_TIMEOUT: 1000 * 60 * 5, // 5 minutes
-});
+    src:       "background.js",
+    extension: config.VERSION,
+    isWebeid:  true,
+
+    ...(optional ? optional : {}),
+  };
+
+  return response as T;
+}
