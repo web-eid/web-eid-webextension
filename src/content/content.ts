@@ -24,24 +24,40 @@ import Action from "@web-eid/web-eid-library/models/Action";
 import ContextInsecureError from "@web-eid/web-eid-library/errors/ContextInsecureError";
 
 import config from "../config";
-import TypedMap from "src/models/TypedMap";
+import TypedMap from "../models/TypedMap";
+import TokenSigningPromise from "../models/TokenSigning/TokenSigningPromise";
+import { TokenSigningCertResponse, TokenSigningErrorResponse, TokenSigningResponse } from "../models/TokenSigning/TokenSigningResponse";
+import {
+  TokenSigningMessage,
+  TokenSigningGetCertificateMessage,
+  TokenSigningSignMessage,
+  TokenSigningVersionMessage,
+} from "../models/TokenSigning/TokenSigningMessage";
+import tokenSigningResponse from "../shared/tokenSigningResponse";
 
-function isValidEvent(event: MessageEvent): boolean {
+function isWebeidEvent(event: MessageEvent): boolean {
   return (
     event.source === window &&
     event.data?.action?.startsWith?.("web-eid:")
   );
 }
 
+function isTokenSigningEvent(event: MessageEvent): boolean {
+  return (
+    event.source === window &&
+    event.data.nonce &&
+    ["VERSION", "CERT", "SIGN"].includes(event.data.type)
+  );
+}
+
 async function send(message: object): Promise<object | void> {
   const response = await browser.runtime.sendMessage(message);
-  console.log("Content send response", response);
   return response;
 }
 
 window.addEventListener("message", async (event) => {
-  if (isValidEvent(event)) {
-    console.log("message event: ", event);
+  if (isWebeidEvent(event)) {
+    console.log("Web-eID event: ", event);
 
     if (!window.isSecureContext) {
       const response = {
@@ -78,6 +94,19 @@ window.addEventListener("message", async (event) => {
         window.postMessage(response, event.origin);
       }
     }
+  } else if (isTokenSigningEvent(event)) {
+    console.log("TokenSigning event:", event);
+
+    if (!window.isSecureContext) {
+      console.error(new ContextInsecureError());
+
+      const nonce    = event.data.nonce;
+      const response = tokenSigningResponse<TokenSigningErrorResponse>("technical_error", nonce);
+
+      window.postMessage(response, event.origin);
+    } else {
+      window.postMessage(await send(event.data), event.origin);
+    }
   }
 });
 
@@ -91,61 +120,25 @@ declare global {
 }
 
 if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
-  interface EidPromise {
-    resolve: (value?: any) => void;
-    reject: (reason?: any) => void;
-  }
-
-  interface EidMessageFromExtension {
-    src: string;
-    nonce: string;
-    result?: string;
-    signature?: string;
-    version?: string;
-    extension?: string;
-    cert?: string;
-  }
-
-  interface EidMessageToExtension {
-    src?: string;
-    nonce?: string;
-  }
-
-  interface EidGetCertificateMessage extends EidMessageToExtension {
-    type: "CERT";
-    lang?: string;
-    filter?: "AUTH" | "SIGN";
-  }
-
-  interface EidAuthenticateMessage extends EidMessageToExtension {
-    type: "SIGN";
-    cert: string;
-    hash: string;
-    hashtype: string;
-    lang?: string;
-    info?: string;
-  }
-
-  interface EidVersionMessage extends EidMessageToExtension {
-    type: "VERSION";
-  }
 
   const pageScript = function(): void {
     let hasDeprecationWarningDisplayed = false;
 
-    const eidPromises: TypedMap<EidPromise> = {};
+    const eidPromises: TypedMap<TokenSigningPromise> = {};
 
     // Turn the incoming message from extension
     // into pending Promise resolving
     window.addEventListener("message", function (event) {
       if (event.source !== window) return;
+
       if (event.data.src && (event.data.src === "background.js")) {
         console.log("Page received: ");
         console.log(event.data);
+
         // Get the promise
         if (event.data.nonce) {
           const p = eidPromises[event.data.nonce];
-          // resolve
+
           if (event.data.result === "ok") {
             if (event.data.signature !== undefined) {
               p.resolve({ hex: event.data.signature });
@@ -158,9 +151,9 @@ if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
               console.log(event.data);
             }
           } else {
-            // reject
             p.reject(new Error(event.data.result));
           }
+
           delete eidPromises[event.data.nonce];
         } else {
           console.log("No nonce in event msg");
@@ -175,16 +168,15 @@ if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
       return val;
     }
 
-    function messagePromise<T extends EidMessageToExtension>(msg: T): Promise<any> {
+    function messagePromise<TMessage extends TokenSigningMessage, TResponse extends TokenSigningResponse>(
+      msg: TMessage
+    ): Promise<TResponse> {
       if (!hasDeprecationWarningDisplayed) {
         console.warn("TokenSigning API is deprecated. Please consider switching to the new Web-eID library.");
         hasDeprecationWarningDisplayed = true;
       }
 
       return new Promise(function (resolve, reject) {
-        // amend with necessary metadata
-        msg["nonce"] = nonce();
-        msg["src"] = "page.js";
         // send message
         window.postMessage(msg, "*");
         // and store promise callbacks
@@ -193,8 +185,10 @@ if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
     }
 
     window.TokenSigning = class TokenSigning {
-      getCertificate(options: {lang?: string; filter?: "AUTH" | "SIGN"}): Promise<any> {
-        const msg: EidGetCertificateMessage = {
+      getCertificate(options: {lang?: string; filter?: "AUTH" | "SIGN"}): Promise<TokenSigningCertResponse> {
+        const msg: TokenSigningGetCertificateMessage = {
+          src:    "page.js",
+          nonce:  nonce(),
           type:   "CERT",
           lang:   options.lang,
           filter: options.filter,
@@ -208,8 +202,10 @@ if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
         cert: { hex: string },
         hash: { type: string; hex: string },
         options: { lang: string; info: string }
-      ): Promise<EidMessageFromExtension> {
-        const msg: EidAuthenticateMessage = {
+      ): Promise<TokenSigningResponse> {
+        const msg: TokenSigningSignMessage = {
+          src:      "page.js",
+          nonce:    nonce(),
           type:     "SIGN",
           cert:     cert.hex,
           hash:     hash.hex,
@@ -222,8 +218,12 @@ if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
         return messagePromise(msg);
       }
 
-      getVersion(): Promise<EidMessageFromExtension> {
-        const msg: EidVersionMessage = { type: "VERSION" };
+      getVersion(): Promise<TokenSigningResponse> {
+        const msg: TokenSigningVersionMessage = {
+          src:   "page.js",
+          nonce: nonce(),
+          type:  "VERSION",
+        };
 
         console.log("getVersion()");
         return messagePromise(msg);

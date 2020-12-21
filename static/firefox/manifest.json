@@ -3,11 +3,11 @@
   "name": "Web eID",
   "version": "{{package.version}}",
 
-  "description": "",
+  "description": "The Web eID extension enables usage of European Union electronic identity smart cards for secure authentication and digital signing of documents on the web using public-key cryptography.",
 
   "browser_specific_settings": {
     "gecko": {
-      "id": "web-eid-webextension-DEVELOPMENT-MODE-MOCK-ID@web-eid.eu"
+      "id": "{e68418bc-f2b0-4459-a9ea-3e72b6751b07}"
     }
   },
 

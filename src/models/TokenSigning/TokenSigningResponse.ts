@@ -20,12 +20,46 @@
  * SOFTWARE.
  */
 
-export default Object.freeze({
-  NATIVE_APP_NAME: "eu.webeid",
-  VERSION:         "{{package.version}}",
+type TokenSigningError
+  = "no_certificates"
+  | "invalid_argument"
+  | "user_cancel"
+  | "not_allowed"
+  | "driver_error"
+  | "pin_blocked"
+  | "technical_error";
 
-  NATIVE_MESSAGE_MAX_BYTES: 8192,
+export type TokenSigningResult
+  = "ok"
+  | TokenSigningError;
 
-  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  true,
-  TOKEN_SIGNING_USER_INTERACTION_TIMEOUT: 1000 * 60 * 5, // 5 minutes
-});
+export interface TokenSigningResponse {
+  src: string;
+  nonce: string;
+  extension: string;
+  isWebeid: true;
+
+  result: TokenSigningResult;
+}
+
+export interface TokenSigningStatusResponse extends TokenSigningResponse {
+  result: "ok";
+  version: string;
+}
+
+export interface TokenSigningCertResponse extends TokenSigningResponse {
+  result: "ok";
+  cert: string;
+}
+
+export interface TokenSigningSignResponse extends TokenSigningResponse {
+  result: "ok";
+  signature: string;
+}
+
+export interface TokenSigningErrorResponse extends TokenSigningResponse {
+  result: TokenSigningError;
+
+  // Exception details object, provided by Web-eID extension
+  nativeException?: any;
+}
