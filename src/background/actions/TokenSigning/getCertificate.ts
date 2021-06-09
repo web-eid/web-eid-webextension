@@ -39,9 +39,10 @@ export default async function getCertificate(
   lang?: string,
   filter: "AUTH" | "SIGN" = "SIGN",
 ): Promise<TokenSigningCertResponse | TokenSigningErrorResponse> {
+  const nativeAppService = new NativeAppService();
+
   try {
-    const nativeAppService = new NativeAppService();
-    const nativeAppStatus  = await nativeAppService.connect();
+    const nativeAppStatus = await nativeAppService.connect();
 
     console.log("Get certificate: connected to native", nativeAppStatus);
 
@@ -50,7 +51,7 @@ export default async function getCertificate(
         command: "get-certificate",
 
         arguments: {
-          "type":   filter.toLowerCase(),
+          "type":   filter.toLowerCase() as "sign" | "auth",
           "origin": (new URL(sourceUrl)).origin,
 
           // TODO: Implement i18n in native application
@@ -80,5 +81,7 @@ export default async function getCertificate(
   } catch (error) {
     console.error(error);
     return errorToResponse(nonce, error);
+  } finally {
+    nativeAppService.close();
   }
 }

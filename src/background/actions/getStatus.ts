@@ -28,10 +28,11 @@ import NativeAppService from "../services/NativeAppService";
 
 export default async function getStatus(): Promise<any> {
   const extension = config.VERSION;
+  const nativeAppService = new NativeAppService();
 
   try {
-    const nativeAppService = new NativeAppService();
-    const status           = await nativeAppService.connect();
+
+    const status = await nativeAppService.connect();
 
     const nativeApp = (
       status.version.startsWith("v")
@@ -39,7 +40,10 @@ export default async function getStatus(): Promise<any> {
         : status.version
     );
 
-    nativeAppService.close();
+    await nativeAppService.send({
+      command:   "quit",
+      arguments: {},
+    });
 
     return {
       extension,
@@ -56,5 +60,7 @@ export default async function getStatus(): Promise<any> {
       action: Action.STATUS_FAILURE,
       error:  serializeError(error),
     };
+  } finally {
+    nativeAppService.close();
   }
 }

@@ -41,9 +41,10 @@ export default async function sign(
   algorithm: string,
   lang?: string,
 ): Promise<TokenSigningSignResponse | TokenSigningErrorResponse> {
+  const nativeAppService = new NativeAppService();
+
   try {
-    const nativeAppService = new NativeAppService();
-    const nativeAppStatus  = await nativeAppService.connect();
+    const nativeAppStatus = await nativeAppService.connect();
 
     console.log("Sign: connected to native", nativeAppStatus);
 
@@ -74,5 +75,7 @@ export default async function sign(
   } catch (error) {
     console.error(error);
     return errorToResponse(nonce, error);
+  } finally {
+    nativeAppService.close();
   }
 }
