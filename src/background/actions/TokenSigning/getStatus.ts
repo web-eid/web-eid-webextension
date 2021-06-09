@@ -31,10 +31,10 @@ import errorToResponse from "./errorToResponse";
 export default async function getStatus(
   nonce: string,
 ): Promise<TokenSigningStatusResponse | TokenSigningErrorResponse> {
+  const nativeAppService = new NativeAppService();
 
   try {
-    const nativeAppService = new NativeAppService();
-    const nativeAppStatus  = await nativeAppService.connect();
+    const nativeAppStatus = await nativeAppService.connect();
 
     // The token-signing uses x.y.z.build version string pattern
     const version = nativeAppStatus.version.replace("+", ".");
@@ -43,9 +43,16 @@ export default async function getStatus(
       throw new Error("missing native application version");
     }
 
+    await nativeAppService.send({
+      command:   "quit",
+      arguments: {},
+    });
+
     return tokenSigningResponse<TokenSigningStatusResponse>("ok", nonce, { version });
   } catch (error) {
     console.error(error);
     return errorToResponse(nonce, error);
+  } finally {
+    nativeAppService.close();
   }
 }

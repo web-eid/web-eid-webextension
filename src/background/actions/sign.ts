@@ -27,7 +27,7 @@ import ServerTimeoutError from "@web-eid/web-eid-library/errors/ServerTimeoutErr
 import OriginMismatchError from "@web-eid/web-eid-library/errors/OriginMismatchError";
 import { serializeError } from "@web-eid/web-eid-library/utils/errorSerializer";
 
-import NativeAppService, { NativeAppState } from "../services/NativeAppService";
+import NativeAppService from "../services/NativeAppService";
 import WebServerService from "../services/WebServerService";
 import HttpResponse from "../../models/HttpResponse";
 import TypedMap from "../../models/TypedMap";
@@ -119,15 +119,8 @@ export default async function sign(
 
     console.log("Sign: postPrepareSigningUrl fetched", prepareDocumentResult);
 
-    console.log("Native app state", nativeAppService.state);
-
-    if (nativeAppService.state === NativeAppState.CONNECTED) {
-      nativeAppService.close();
-    }
-
     nativeAppService = new NativeAppService();
-
-    nativeAppStatus = await nativeAppService.connect();
+    nativeAppStatus  = await nativeAppService.connect();
 
     console.log("Sign: reconnected to native", nativeAppStatus);
 
@@ -204,6 +197,6 @@ export default async function sign(
       error:  serializeError(error),
     };
   } finally {
-    if (nativeAppService) nativeAppService.close();
+    nativeAppService?.close();
   }
 }

@@ -145,6 +145,6 @@ export default async function authenticate(
       error:  serializeError(error),
     };
   } finally {
-    if (nativeAppService) nativeAppService.close();
+    nativeAppService?.close();
   }
 }

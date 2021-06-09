@@ -28,9 +28,12 @@ import libraryConfig from "@web-eid/web-eid-library/config";
 
 import config from "../../config";
 import { Port } from "../../models/Browser/Runtime";
-import { objectByteSize } from "../../shared/utils";
+import { objectByteSize, throwAfterTimeout } from "../../shared/utils";
+import { NativeAppMessage } from "../../models/NativeAppMessage";
 
-type NativeAppPendingRequest = { reject?: Function; resolve?: Function } | null;
+type UnwrappedPromise
+  = { resolve: (value?: any) => void; reject: (reason?: any) => void }
+  | null;
 
 export enum NativeAppState {
   UNINITIALIZED,
@@ -43,7 +46,8 @@ export default class NativeAppService {
   public state: NativeAppState = NativeAppState.UNINITIALIZED;
 
   private port: Port | null = null;
-  private pending: NativeAppPendingRequest = null;
+  private pending: UnwrappedPromise = null;
+  private activeConnection: UnwrappedPromise = null;
 
   async connect(): Promise<{ version: string }> {
     this.state = NativeAppState.CONNECTING;
@@ -56,6 +60,7 @@ export default class NativeAppService {
 
       if (message.version) {
         this.state = NativeAppState.CONNECTED;
+        new Promise((resolve, reject) => this.activeConnection = { resolve, reject });
 
         return message;
       }
@@ -86,38 +91,66 @@ export default class NativeAppService {
     }
   }
 
-  disconnectListener(): void {
+  async disconnectListener(): Promise<void> {
+    console.log("disconnectListener");
     // Accessing lastError when it exists stops chrome from throwing it unnecessarily.
     chrome?.runtime?.lastError;
 
+    this.activeConnection?.resolve();
     this.state = NativeAppState.DISCONNECTED;
+
     this.pending?.reject?.(new UnknownError("native application closed the connection before a response"));
     this.pending = null;
   }
 
-  close(error?: any): void {
-    console.log("Disconnecting from native app");
+  disconnectForcefully(): void {
     this.state = NativeAppState.DISCONNECTED;
 
-    this.pending?.reject?.(error);
+    // At this point, requests should already be resolved.
+    // Rejecting a resolved promise is a NOOP.
+    this.pending?.reject?.(new UnknownError("extension closed connection to native app prematurely"));
     this.pending = null;
+
     this.port?.disconnect();
   }
 
-  send<T extends any>(message: object): Promise<T> {
+  close(): void {
+    if (this.state == NativeAppState.DISCONNECTED) return;
+
+    this.disconnectForcefully();
+  }
+
+  send<T extends any>(message: NativeAppMessage): Promise<T> {
     switch (this.state) {
       case NativeAppState.CONNECTED: {
         return new Promise((resolve, reject) => {
           this.pending = { resolve, reject };
 
-          const onResponse = (message: any): void => {
+          const onResponse = async (message: any): Promise<void> => {
             this.port?.onMessage.removeListener(onResponse);
-            if (message.error) {
-              reject(deserializeError(message.error));
-            } else {
-              resolve(message);
+
+            try {
+              await Promise.race([
+                this.activeConnection,
+                throwAfterTimeout(
+                  config.NATIVE_GRACEFUL_DISCONNECT_TIMEOUT,
+                  new Error("Native application did not disconnect after response")
+                ),
+              ]);
+
+            } catch (error) {
+              console.error(error);
+              this.disconnectForcefully();
+
+            } finally {
+              if (message.error) {
+                reject(deserializeError(message.error));
+              } else {
+                resolve(message);
+              }
+
+              this.pending = null;
             }
-            this.pending = null;
           };
 
           this.port?.onMessage.addListener(onResponse);
