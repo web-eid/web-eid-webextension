@@ -1,7 +1,6 @@
 export interface NativeAppCommandGetCertificate {
-  command: "get-certificate";
+  command: "get-signing-certificate";
   arguments: {
-    "type": "auth" | "sign";
     "origin": string;
     "lang"?: string;
   };

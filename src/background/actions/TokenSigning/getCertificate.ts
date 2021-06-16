@@ -41,6 +41,16 @@ export default async function getCertificate(
 ): Promise<TokenSigningCertResponse | TokenSigningErrorResponse> {
   const nativeAppService = new NativeAppService();
 
+  if (filter !== "SIGN") {
+    const { message, name, stack } = new Error("Web-eID only allows signing with a signing certificate");
+
+    return tokenSigningResponse<TokenSigningErrorResponse>("not_allowed", nonce, {
+      message,
+      name,
+      stack,
+    });
+  }
+
   try {
     const nativeAppStatus = await nativeAppService.connect();
 
@@ -48,10 +58,9 @@ export default async function getCertificate(
 
     const certificateResponse = await Promise.race([
       nativeAppService.send({
-        command: "get-certificate",
+        command: "get-signing-certificate",
 
         arguments: {
-          "type":   filter.toLowerCase() as "sign" | "auth",
           "origin": (new URL(sourceUrl)).origin,
 
           // TODO: Implement i18n in native application
