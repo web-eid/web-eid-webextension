@@ -32,6 +32,7 @@ import {
 } from "../../../models/TokenSigning/TokenSigningResponse";
 import { throwAfterTimeout } from "../../../shared/utils";
 import errorToResponse from "./errorToResponse";
+import digestCommands from "./digestCommands";
 
 export default async function sign(
   nonce: string,
@@ -54,7 +55,7 @@ export default async function sign(
 
         arguments: {
           "doc-hash":      new ByteArray().fromHex(hash).toBase64(),
-          "hash-algo":     algorithm,
+          "hash-algo":     Object.keys(digestCommands).includes(algorithm) ? digestCommands[algorithm] : algorithm,
           "origin":        (new URL(sourceUrl)).origin,
           "user-eid-cert": new ByteArray().fromHex(certificate).toBase64(),
 
