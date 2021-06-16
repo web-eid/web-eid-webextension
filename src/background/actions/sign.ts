@@ -65,10 +65,9 @@ export default async function sign(
 
     const certificateResponse = await Promise.race([
       nativeAppService.send({
-        command: "get-certificate",
+        command: "get-signing-certificate",
 
         arguments: {
-          "type":   "sign",
           "origin": (new URL(postPrepareSigningUrl)).origin,
         },
       }),
