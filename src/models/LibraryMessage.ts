@@ -39,6 +39,7 @@ export interface AuthenticateRequestMessage extends Object {
   headers: TypedMap<string>;
   userInteractionTimeout: number;
   serverRequestTimeout: number;
+  lang?: string;
 }
 
 export interface SignRequestMessage extends Object {
@@ -48,4 +49,5 @@ export interface SignRequestMessage extends Object {
   headers: TypedMap<string>;
   userInteractionTimeout: number;
   serverRequestTimeout: number;
+  lang?: string;
 }

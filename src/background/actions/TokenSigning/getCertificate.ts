@@ -32,6 +32,7 @@ import {
 } from "../../../models/TokenSigning/TokenSigningResponse";
 import { throwAfterTimeout } from "../../../shared/utils";
 import errorToResponse from "./errorToResponse";
+import threeLetterLanguageCodes from "./threeLetterLanguageCodes";
 
 export default async function getCertificate(
   nonce: string,
@@ -39,6 +40,10 @@ export default async function getCertificate(
   lang?: string,
   filter: "AUTH" | "SIGN" = "SIGN",
 ): Promise<TokenSigningCertResponse | TokenSigningErrorResponse> {
+  if (lang && Object.keys(threeLetterLanguageCodes).includes(lang)) {
+    lang = threeLetterLanguageCodes[lang];
+  }
+
   const nativeAppService = new NativeAppService();
 
   if (filter !== "SIGN") {
@@ -63,8 +68,7 @@ export default async function getCertificate(
         arguments: {
           "origin": (new URL(sourceUrl)).origin,
 
-          // TODO: Implement i18n in native application
-          // "lang": lang
+          ...(lang ? { lang } : {}),
         },
       }),
 
