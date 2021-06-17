@@ -40,6 +40,7 @@ export default async function authenticate(
   headers: TypedMap<string>,
   userInteractionTimeout: number,
   serverRequestTimeout: number,
+  lang?: string,
 ): Promise<object | void> {
   let webServerService: WebServerService | undefined;
   let nativeAppService: NativeAppService | undefined;
@@ -93,6 +94,8 @@ export default async function authenticate(
               ? new ByteArray(response.certificateInfo?.rawDER).toBase64()
               : null
           ),
+
+          ...(lang ? { lang } : {}),
         },
       }),
 

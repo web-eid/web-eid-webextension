@@ -39,6 +39,7 @@ export default async function sign(
   headers: TypedMap<string>,
   userInteractionTimeout: number,
   serverRequestTimeout: number,
+  lang?: string,
 ): Promise<object | void> {
   let webServerService: WebServerService | undefined;
   let nativeAppService: NativeAppService | undefined;
@@ -69,6 +70,8 @@ export default async function sign(
 
         arguments: {
           "origin": (new URL(postPrepareSigningUrl)).origin,
+
+          ...(lang ? { lang } : {}),
         },
       }),
 
@@ -132,6 +135,8 @@ export default async function sign(
           "hash-algo":     prepareDocumentResult.body.algorithm,
           "origin":        (new URL(postPrepareSigningUrl)).origin,
           "user-eid-cert": certificate,
+
+          ...(lang ? { lang } : {}),
         },
       }),
 

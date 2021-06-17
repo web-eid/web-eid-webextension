@@ -41,6 +41,7 @@ async function onAction(message: LibraryMessage): Promise<void | object> {
         message.headers,
         message.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.serverRequestTimeout   || libraryConfig.DEFAULT_SERVER_REQUEST_TIMEOUT,
+        message.lang,
       );
 
     case Action.SIGN:
@@ -50,6 +51,7 @@ async function onAction(message: LibraryMessage): Promise<void | object> {
         message.headers,
         message.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.serverRequestTimeout   || libraryConfig.DEFAULT_SERVER_REQUEST_TIMEOUT,
+        message.lang,
       );
 
     case Action.STATUS:

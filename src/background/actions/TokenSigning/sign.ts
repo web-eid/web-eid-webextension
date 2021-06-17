@@ -33,6 +33,7 @@ import {
 import { throwAfterTimeout } from "../../../shared/utils";
 import errorToResponse from "./errorToResponse";
 import digestCommands from "./digestCommands";
+import threeLetterLanguageCodes from "./threeLetterLanguageCodes";
 
 export default async function sign(
   nonce: string,
@@ -42,6 +43,10 @@ export default async function sign(
   algorithm: string,
   lang?: string,
 ): Promise<TokenSigningSignResponse | TokenSigningErrorResponse> {
+  if (lang && Object.keys(threeLetterLanguageCodes).includes(lang)) {
+    lang = threeLetterLanguageCodes[lang];
+  }
+
   const nativeAppService = new NativeAppService();
 
   try {
@@ -59,8 +64,7 @@ export default async function sign(
           "origin":        (new URL(sourceUrl)).origin,
           "user-eid-cert": new ByteArray().fromHex(certificate).toBase64(),
 
-          // TODO: Implement i18n in native application
-          // "lang": lang
+          ...(lang ? { lang } : {}),
         },
       }),
       throwAfterTimeout(config.TOKEN_SIGNING_USER_INTERACTION_TIMEOUT, new UserTimeoutError()),
