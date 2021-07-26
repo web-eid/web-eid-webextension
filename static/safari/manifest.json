@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "default_locale": "en",
   "name": "Web eID",
-  "description": "The extension enables usage of electronic identity for secure authentication and digital signing on the web.",
+  "description": "Use your electronic identification card for secure authentication and digital signing.",
   "version": "{{package.version}}",
   "icons": {
     "128": "web-eid-icon-128.png"
