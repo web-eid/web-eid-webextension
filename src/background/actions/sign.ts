@@ -32,6 +32,7 @@ import WebServerService from "../services/WebServerService";
 import HttpResponse from "../../models/HttpResponse";
 import TypedMap from "../../models/TypedMap";
 import { pick, throwAfterTimeout, isSameOrigin } from "../../shared/utils";
+import { MessageSender } from "../../models/Browser/Runtime";
 
 export default async function sign(
   postPrepareSigningUrl: string,
@@ -39,6 +40,7 @@ export default async function sign(
   headers: TypedMap<string>,
   userInteractionTimeout: number,
   serverRequestTimeout: number,
+  sender: MessageSender,
   lang?: string,
 ): Promise<object | void> {
   let webServerService: WebServerService | undefined;
@@ -57,7 +59,11 @@ export default async function sign(
       throw new OriginMismatchError();
     }
 
-    webServerService = new WebServerService();
+    if (!sender.tab?.id || sender.tab?.id === browser.tabs.TAB_ID_NONE) {
+      throw new Error("invalid sender tab");
+    }
+
+    webServerService = new WebServerService(sender.tab.id);
     nativeAppService = new NativeAppService();
 
     let nativeAppStatus = await nativeAppService.connect();

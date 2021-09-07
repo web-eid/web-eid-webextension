@@ -28,14 +28,15 @@ import ServerRejectedError from "@web-eid/web-eid-library/errors/ServerRejectedE
 
 import { OnHeadersReceivedDetails, CertificateInfo, Fingerprint } from "../../models/Browser/WebRequest";
 import HttpResponse from "../../models/HttpResponse";
-import { headersToObject } from "../../shared/utils";
 
 
 export default class WebServerService {
   private fingerprints: Fingerprint[];
+  private tabId: number;
 
-  constructor() {
+  constructor(tabId: number) {
     this.fingerprints = [];
+    this.tabId = tabId;
   }
 
   hasCertificateChanged(): boolean {
@@ -44,11 +45,9 @@ export default class WebServerService {
 
   async fetch<T>(fetchUrl: string, init?: RequestInit): Promise<HttpResponse<T>> {
     let certificateInfo: CertificateInfo | null;
-
     let fetchError: Error | null = null;
-
-
     let hasWebRequestPermission = false;
+
     try {
       hasWebRequestPermission = await browser.permissions.contains({
         permissions: [
@@ -112,15 +111,15 @@ export default class WebServerService {
     }
 
     try {
-      const response = await fetch(fetchUrl, init);
+      const response = await browser.tabs.sendMessage(
+        this.tabId,
+        {
+          action: "fetch",
 
-      const headers = headersToObject(response.headers);
-
-      const body = (
-        headers["content-type"]?.includes("application/json")
-          ? (await response.json())
-          : (await response.text())
-      ) as T;
+          fetchUrl,
+          init,
+        }
+      ) as HttpResponse<T>;
 
       if (hasWebRequestPermission) {
         browser.webRequest.onHeadersReceived.removeListener(onHeadersReceivedListener);
@@ -133,6 +132,8 @@ export default class WebServerService {
         statusText,
         type,
         url,
+        body,
+        headers,
       } = response;
 
       const result = {

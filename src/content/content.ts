@@ -24,16 +24,11 @@ import Action from "@web-eid/web-eid-library/models/Action";
 import ContextInsecureError from "@web-eid/web-eid-library/errors/ContextInsecureError";
 
 import config from "../config";
-import TypedMap from "../models/TypedMap";
-import TokenSigningPromise from "../models/TokenSigning/TokenSigningPromise";
-import { TokenSigningCertResponse, TokenSigningErrorResponse, TokenSigningResponse } from "../models/TokenSigning/TokenSigningResponse";
-import {
-  TokenSigningMessage,
-  TokenSigningGetCertificateMessage,
-  TokenSigningSignMessage,
-  TokenSigningVersionMessage,
-} from "../models/TokenSigning/TokenSigningMessage";
+import HttpResponse from "../models/HttpResponse";
+import { TokenSigningErrorResponse } from "../models/TokenSigning/TokenSigningResponse";
+import { headersToObject } from "../shared/utils";
 import tokenSigningResponse from "../shared/tokenSigningResponse";
+import injectPageScript from "./TokenSigning/injectPageScript";
 
 function isWebeidEvent(event: MessageEvent): boolean {
   return (
@@ -110,146 +105,51 @@ window.addEventListener("message", async (event) => {
   }
 });
 
+async function fetchProxy<T>(fetchUrl: string, init?: RequestInit): Promise<HttpResponse<T>> {
+  const response = await fetch(fetchUrl, init);
 
-// --[ chrome-token-signing backwards compatibility ]---------------------------
+  const headers = headersToObject(response.headers);
 
-declare global {
-  interface Window {
-    TokenSigning: Function;
-  }
+  const body = (
+    headers["content-type"]?.includes("application/json")
+      ? (await response.json())
+      : (await response.text())
+  ) as T;
+
+  const {
+    ok,
+    redirected,
+    status,
+    statusText,
+    type,
+    url,
+  } = response;
+
+  return {
+    ok,
+    redirected,
+    status,
+    statusText,
+    type,
+    url,
+    headers,
+    body,
+  };
 }
 
-if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
+browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "fetch") {
+    fetchProxy(request.fetchUrl, request.init)
+      .then(sendResponse)
+      .catch(sendResponse);
 
-  const pageScript = function(): void {
-    let hasDeprecationWarningDisplayed = false;
-
-    const eidPromises: TypedMap<TokenSigningPromise> = {};
-
-    // Turn the incoming message from extension
-    // into pending Promise resolving
-    window.addEventListener("message", function (event) {
-      if (event.source !== window) return;
-
-      if (event.data.src && (event.data.src === "background.js")) {
-        console.log("Page received: ");
-        console.log(event.data);
-
-        // Get the promise
-        if (event.data.nonce) {
-          const p = eidPromises[event.data.nonce];
-
-          if (event.data.result === "ok") {
-            if (event.data.signature !== undefined) {
-              p.resolve({ hex: event.data.signature });
-            } else if (event.data.version !== undefined) {
-              p.resolve(event.data.extension + "/" + event.data.version);
-            } else if (event.data.cert !== undefined) {
-              p.resolve({ hex: event.data.cert });
-            } else {
-              console.log("No idea how to handle message");
-              console.log(event.data);
-            }
-          } else {
-            p.reject(new Error(event.data.result));
-          }
-
-          delete eidPromises[event.data.nonce];
-        } else {
-          console.log("No nonce in event msg");
-        }
-      }
-    }, false);
-
-    function nonce(): string {
-      let val = "";
-      const hex = "abcdefghijklmnopqrstuvwxyz0123456789";
-      for (let i = 0; i < 16; i++) val += hex.charAt(Math.floor(Math.random() * hex.length));
-      return val;
-    }
-
-    function messagePromise<TMessage extends TokenSigningMessage, TResponse extends TokenSigningResponse>(
-      msg: TMessage
-    ): Promise<TResponse> {
-      if (!hasDeprecationWarningDisplayed) {
-        console.warn("TokenSigning API is deprecated. Please consider switching to the new Web-eID library.");
-        hasDeprecationWarningDisplayed = true;
-      }
-
-      return new Promise(function (resolve, reject) {
-        // send message
-        window.postMessage(msg, "*");
-        // and store promise callbacks
-        eidPromises[msg.nonce] = { resolve, reject };
-      });
-    }
-
-    window.TokenSigning = class TokenSigning {
-      getCertificate(options: {lang?: string; filter?: "AUTH" | "SIGN"}): Promise<TokenSigningCertResponse> {
-        const msg: TokenSigningGetCertificateMessage = {
-          src:    "page.js",
-          nonce:  nonce(),
-          type:   "CERT",
-          lang:   options.lang,
-          filter: options.filter,
-        };
-
-        console.log("getCertificate()");
-        return messagePromise(msg);
-      }
-
-      sign(
-        cert: { hex: string },
-        hash: { type: string; hex: string },
-        options: { lang: string; info: string }
-      ): Promise<TokenSigningResponse> {
-        const msg: TokenSigningSignMessage = {
-          src:      "page.js",
-          nonce:    nonce(),
-          type:     "SIGN",
-          cert:     cert.hex,
-          hash:     hash.hex,
-          hashtype: hash.type,
-          lang:     options.lang,
-          info:     options.info,
-        };
-
-        console.log("sign()");
-        return messagePromise(msg);
-      }
-
-      getVersion(): Promise<TokenSigningResponse> {
-        const msg: TokenSigningVersionMessage = {
-          src:   "page.js",
-          nonce: nonce(),
-          type:  "VERSION",
-        };
-
-        console.log("getVersion()");
-        return messagePromise(msg);
-      }
-    };
-  };
-
-  /**
-   * Check the page for an existing TokenSigning page script.
-   * The script will be injected to the DOM of every page, which doesn't already have the script.
-   * To circumvent Content Security Policy issues, the website can include the script on its own.
-   *
-   * Example:
-   *   <script src="path-to/page.js" data-name="TokenSigning"></script>
-   *
-   * The page script can be found here:
-   *   https://github.com/open-eid/chrome-token-signing/blob/master/extension/page.js
-   */
-  if (!document.querySelector("script[data-name='TokenSigning']")) {
-    const s = document.createElement("script");
-
-    s.type         = "text/javascript";
-    s.dataset.name = "TokenSigning";
-    s.dataset.by   = "Web-eID extension";
-    s.innerHTML    = "(" + pageScript + ")();";
-
-    (document.head || document.documentElement).appendChild(s);
+    return true;
   }
+
+  return false;
+});
+
+// --[ chrome-token-signing backwards compatibility ]---------------------------
+if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
+  injectPageScript();
 }
