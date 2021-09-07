@@ -32,7 +32,7 @@ import getStatus from "./actions/getStatus";
 import { TokenSigningMessage } from "../models/TokenSigning/TokenSigningMessage";
 import TokenSigningAction from "./actions/TokenSigning";
 
-async function onAction(message: LibraryMessage): Promise<void | object> {
+async function onAction(message: LibraryMessage, sender: MessageSender): Promise<void | object> {
   switch (message.action) {
     case Action.AUTHENTICATE:
       return await authenticate(
@@ -41,6 +41,7 @@ async function onAction(message: LibraryMessage): Promise<void | object> {
         message.headers,
         message.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.serverRequestTimeout   || libraryConfig.DEFAULT_SERVER_REQUEST_TIMEOUT,
+        sender,
         message.lang,
       );
 
@@ -51,6 +52,7 @@ async function onAction(message: LibraryMessage): Promise<void | object> {
         message.headers,
         message.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.serverRequestTimeout   || libraryConfig.DEFAULT_SERVER_REQUEST_TIMEOUT,
+        sender,
         message.lang,
       );
 
@@ -93,7 +95,7 @@ async function onTokenSigningAction(message: TokenSigningMessage, sender: Messag
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if ((message as LibraryMessage).action) {
-    onAction(message).then(sendResponse);
+    onAction(message, sender).then(sendResponse);
   } else if ((message as TokenSigningMessage).type) {
     onTokenSigningAction(message, sender).then(sendResponse);
   }

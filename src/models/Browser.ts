@@ -23,6 +23,7 @@
 import WebRequest from "./Browser/WebRequest";
 import Runtime from "./Browser/Runtime";
 import Permissions from "./Browser/Permissions";
+import Tabs from "./Browser/Tabs";
 
 declare global {
   const browser: Browser;
@@ -59,4 +60,11 @@ export default interface Browser {
    * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/permissions
    */
   permissions: Permissions;
+
+  /**
+   * Interact with the browser's tab system.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs
+   */
+  tabs: Tabs;
 }

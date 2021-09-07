@@ -24,6 +24,7 @@
   },
   "permissions": [
     "*://*/*",
-    "nativeMessaging"
+    "nativeMessaging",
+    "tabs"
   ]
 }

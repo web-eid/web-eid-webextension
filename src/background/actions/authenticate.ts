@@ -33,6 +33,7 @@ import TypedMap from "../../models/TypedMap";
 import HttpResponse from "../../models/HttpResponse";
 import { pick, throwAfterTimeout, isSameOrigin } from "../../shared/utils";
 import ByteArray from "../../shared/ByteArray";
+import { MessageSender } from "../../models/Browser/Runtime";
 
 export default async function authenticate(
   getAuthChallengeUrl: string,
@@ -40,6 +41,7 @@ export default async function authenticate(
   headers: TypedMap<string>,
   userInteractionTimeout: number,
   serverRequestTimeout: number,
+  sender: MessageSender,
   lang?: string,
 ): Promise<object | void> {
   let webServerService: WebServerService | undefined;
@@ -58,7 +60,11 @@ export default async function authenticate(
       throw new OriginMismatchError();
     }
 
-    webServerService = new WebServerService();
+    if (!sender.tab?.id || sender.tab?.id === browser.tabs.TAB_ID_NONE) {
+      throw new Error("invalid sender tab");
+    }
+
+    webServerService = new WebServerService(sender.tab.id);
     nativeAppService = new NativeAppService();
 
     const nativeAppStatus = await nativeAppService.connect();

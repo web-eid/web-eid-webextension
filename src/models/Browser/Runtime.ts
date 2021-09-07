@@ -114,7 +114,9 @@ export interface MessageSender {
    *
    * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/Tab
    */
-  tab?: object;
+  tab?: {
+    id: number;
+  };
 
   /**
    * The frame that opened the connection.
