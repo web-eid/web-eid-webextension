@@ -26,6 +26,7 @@ import { deserializeError } from "@web-eid/web-eid-library/utils/errorSerializer
 
 import config from "../../config";
 import { objectByteSize } from "../../shared/utils";
+import { NativeAppMessage } from "../../models/NativeAppMessage";
 
 type NativeAppPendingRequest = { reject?: Function; resolve?: Function } | null;
 
@@ -68,7 +69,7 @@ export default class NativeAppService {
       } else {
         throw new NativeUnavailableError("unexpected error");
       }
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof NativeUnavailableError) {
         throw error;
       } else if (error?.message) {
@@ -87,7 +88,12 @@ export default class NativeAppService {
     this.pending = null;
   }
 
-  send<T extends object>(message: object): Promise<T> {
+  send<T extends any>(message: NativeAppMessage): Promise<T> {
+
+    if (message.command == "quit") {
+      return Promise.resolve({} as T);
+    }
+
     switch (this.state) {
       case NativeAppState.CONNECTED: {
         return new Promise((resolve, reject) => {
