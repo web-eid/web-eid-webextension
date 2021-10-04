@@ -74,15 +74,13 @@ export default class NativeAppService {
       } else {
         throw new NativeUnavailableError("unexpected error");
       }
-    } catch (error: any) {
+    } catch (error) {
       if (this.port.error) {
         console.error(this.port.error);
       }
 
-      if (error instanceof NativeUnavailableError) {
+      if (error instanceof Error) {
         throw error;
-      } else if (error?.message) {
-        throw new NativeUnavailableError(error?.message);
       } else if (this.port.error?.message) {
         throw new NativeUnavailableError(this.port.error.message);
       } else {

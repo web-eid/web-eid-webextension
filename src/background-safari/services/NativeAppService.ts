@@ -25,6 +25,7 @@ import libraryConfig from "@web-eid/web-eid-library/config";
 import { deserializeError } from "@web-eid/web-eid-library/utils/errorSerializer";
 
 import config from "../../config";
+import Mutex from "../../shared/Mutex";
 import { objectByteSize } from "../../shared/utils";
 import { NativeAppMessage } from "../../models/NativeAppMessage";
 
@@ -36,6 +37,8 @@ export enum NativeAppState {
   CONNECTED,
   DISCONNECTED,
 }
+
+const commandMutex = new Mutex();
 
 export default class NativeAppService {
   public state: NativeAppState = NativeAppState.UNINITIALIZED;
@@ -69,11 +72,9 @@ export default class NativeAppService {
       } else {
         throw new NativeUnavailableError("unexpected error");
       }
-    } catch (error: any) {
-      if (error instanceof NativeUnavailableError) {
+    } catch (error) {
+      if (error instanceof Error) {
         throw error;
-      } else if (error?.message) {
-        throw new NativeUnavailableError(error?.message);
       } else {
         throw new NativeUnavailableError("unexpected error");
       }
@@ -88,15 +89,14 @@ export default class NativeAppService {
     this.pending = null;
   }
 
-  send<T extends any>(message: NativeAppMessage): Promise<T> {
-
-    if (message.command == "quit") {
-      return Promise.resolve({} as T);
-    }
+  async send<T extends any>(message: NativeAppMessage): Promise<T> {
+    if (message.command == "quit") return {} as T;
 
     switch (this.state) {
       case NativeAppState.CONNECTED: {
-        return new Promise((resolve, reject) => {
+        const releaseLock: Function = await commandMutex.acquire();
+
+        const sendPromise = new Promise<T>((resolve, reject) => {
           this.pending = { resolve, reject };
 
           const onResponse = (message: any): void => {
@@ -119,29 +119,31 @@ export default class NativeAppService {
 
           browser.runtime.sendNativeMessage("application.id", message, onResponse);
         });
+
+        return sendPromise.finally(() => releaseLock());
       }
 
       case NativeAppState.UNINITIALIZED: {
         return Promise.reject(
-          new Error("unable to send message, native application port is not initialized yet")
+          new NativeUnavailableError("unable to send message, native application port is not initialized yet")
         );
       }
 
       case NativeAppState.CONNECTING: {
         return Promise.reject(
-          new Error("unable to send message, native application port is still connecting")
+          new NativeUnavailableError("unable to send message, native application port is still connecting")
         );
       }
 
       case NativeAppState.DISCONNECTED: {
         return Promise.reject(
-          new Error("unable to send message, native application port is disconnected")
+          new NativeUnavailableError("unable to send message, native application port is disconnected")
         );
       }
 
       default: {
         return Promise.reject(
-          new Error("unable to send message, unexpected native app state")
+          new NativeUnavailableError("unable to send message, unexpected native app state")
         );
       }
     }
