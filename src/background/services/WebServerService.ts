@@ -55,8 +55,12 @@ export default class WebServerService {
           "webRequestBlocking",
         ],
       });
+
+      if (hasWebRequestPermission) {
+        console.log("Got permissions for webRequest API");
+      }
     } catch(error) {
-      console.log("Failed to fetch permissions", error);
+      console.log("Failed to fetch webRequest permissions", error);
     }
 
     certificateInfo = null;
@@ -66,6 +70,8 @@ export default class WebServerService {
         details.requestId,
         { rawDER: true }
       );
+
+      console.log("Inspecting webRequest securityInfo");
 
       switch (securityInfo.state) {
         case "secure": {
@@ -77,6 +83,8 @@ export default class WebServerService {
             fetchError = new CertificateChangedError();
             return { cancel: true };
           }
+
+          console.log("TLS state is secure");
 
           break;
         }
