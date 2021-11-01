@@ -41,6 +41,11 @@ APIs, like the smart card subsystem.
     SOURCE_DATE_EPOCH=$(cat ../previous-build/dist/firefox/SOURCE_DATE_EPOCH) npm run clean build package
     ```
 
+    For the **experimental** origin certificate validation feature, which uses the webRequest API and is only available in Firefox, set the `ORIGIN_CERTIFICATE_VALIDATION` environment variable to `true`.
+    ```bash
+    ORIGIN_CERTIFICATE_VALIDATION=true npm run clean build package
+    ```
+
 5. Load in Firefox as a Temporary Extension
     1. Open [about:debugging#/runtime/this-firefox](about:debugging#/runtime/this-firefox)
     2. Click "Load temporary Add-on..." and open `/web-eid-webextension/dist/manifest.json`

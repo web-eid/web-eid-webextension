@@ -31,8 +31,6 @@
   },
   "permissions": [
     "*://*/*",
-    "webRequest",
-    "webRequestBlocking",
     "nativeMessaging"
   ]
 }

@@ -1,4 +1,16 @@
-import { cp, rm, exec, zip, replace, rem, pkg, write, getSourceDateEpoch } from "./build-utils.mjs";
+import {
+  cp,
+  rm,
+  exec,
+  zip,
+  replace,
+  rem,
+  pkg,
+  write,
+  updateJson,
+  getSourceDateEpoch,
+  isOriginCertificateValidationEnabled,
+} from "./build-utils.mjs";
 
 let sourceDateEpoch;
 
@@ -72,6 +84,13 @@ const targets = {
     );
     await cp("./static/firefox/manifest.json", "./dist/firefox/manifest.json");
     await replace("./dist/firefox/manifest.json", "{{package.version}}", pkg.version);
+
+    if (isOriginCertificateValidationEnabled()) {
+      updateJson(
+        "./dist/firefox/manifest.json",
+        (manifest) => ({...manifest, permissions: [...manifest.permissions, "webRequest", "webRequestBlocking"]})
+      )
+    }
 
     rem(
       "Setting up the Chrome manifest"
