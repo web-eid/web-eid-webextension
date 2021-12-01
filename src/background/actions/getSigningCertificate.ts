@@ -21,40 +21,40 @@
  */
 
 import Action from "@web-eid.js/models/Action";
-import { NativeAuthenticateRequest } from "@web-eid.js/models/message/NativeRequest";
-import { NativeAuthenticateResponse } from "@web-eid.js/models/message/NativeResponse";
+import { NativeGetSigningCertificateRequest } from "@web-eid.js/models/message/NativeRequest";
+import { NativeGetSigningCertificateResponse } from "@web-eid.js/models/message/NativeResponse";
+import UnknownError from "@web-eid.js/errors/UnknownError";
 import UserTimeoutError from "@web-eid.js/errors/UserTimeoutError";
 import { serializeError } from "@web-eid.js/utils/errorSerializer";
 
-import { ExtensionAuthenticateResponse, ExtensionFailureResponse } from "@web-eid.js/models/message/ExtensionResponse";
+import {
+  ExtensionFailureResponse,
+  ExtensionGetSigningCertificateResponse,
+} from "@web-eid.js/models/message/ExtensionResponse";
+
 import { MessageSender } from "../../models/Browser/Runtime";
 import NativeAppService from "../services/NativeAppService";
-import UnknownError from "@web-eid.js/errors/UnknownError";
 import config from "../../config";
 import { getSenderUrl } from "../../shared/utils/sender";
 import { throwAfterTimeout } from "../../shared/utils/timing";
 
-export default async function authenticate(
-  challengeNonce: string,
+export default async function getSigningCertificate(
   sender: MessageSender,
   userInteractionTimeout: number,
   lang?: string,
-): Promise<ExtensionAuthenticateResponse | ExtensionFailureResponse> {
-  let nativeAppService: NativeAppService | undefined;
+): Promise<ExtensionGetSigningCertificateResponse | ExtensionFailureResponse> {
+  const extension        = config.VERSION;
+  const nativeAppService = new NativeAppService();
 
   try {
-    nativeAppService = new NativeAppService();
-
     const nativeAppStatus = await nativeAppService.connect();
 
-    config.DEBUG && console.log("Authenticate: connected to native", nativeAppStatus);
+    config.DEBUG && console.log("getSigningCertificate: connected to native", nativeAppStatus);
 
-    const message: NativeAuthenticateRequest = {
-      command: "authenticate",
+    const message: NativeGetSigningCertificateRequest = {
+      command: "get-signing-certificate",
 
       arguments: {
-        challengeNonce,
-
         origin: (new URL(getSenderUrl(sender))).origin,
 
         ...(lang ? { lang } : {}),
@@ -62,34 +62,30 @@ export default async function authenticate(
     };
 
     const response = await Promise.race([
-      nativeAppService.send<NativeAuthenticateResponse>(message),
-
+      nativeAppService.send<NativeGetSigningCertificateResponse>(message),
       throwAfterTimeout(userInteractionTimeout, new UserTimeoutError()),
     ]);
 
-    config.DEBUG && console.log("Authenticate: authentication token received");
-
     const isResponseValid = (
-      response?.unverifiedCertificate &&
-      response?.algorithm             &&
-      response?.signature             &&
-      response?.format                &&
-      response?.appVersion
+      response?.certificate &&
+      response?.supportedSignatureAlgorithms.length
     );
 
     if (isResponseValid) {
-      return { action: Action.AUTHENTICATE_SUCCESS, ...response };
+      return { action: Action.GET_SIGNING_CERTIFICATE_SUCCESS, ...response };
     } else {
       throw new UnknownError("unexpected response from native application");
     }
-  } catch (error) {
-    console.error("Authenticate:", error);
+  } catch (error: any) {
+    error.extension = extension;
+
+    console.error("Status:", error);
 
     return {
-      action: Action.AUTHENTICATE_FAILURE,
+      action: Action.STATUS_FAILURE,
       error:  serializeError(error),
     };
   } finally {
-    nativeAppService?.close();
+    nativeAppService.close();
   }
 }

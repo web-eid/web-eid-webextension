@@ -20,19 +20,22 @@
  * SOFTWARE.
  */
 
-import UserTimeoutError from "@web-eid/web-eid-library/errors/UserTimeoutError";
+import { NativeGetSigningCertificateRequest } from "@web-eid.js/models/message/NativeRequest";
+import { NativeGetSigningCertificateResponse } from "@web-eid.js/models/message/NativeResponse";
+import UserTimeoutError from "@web-eid.js/errors/UserTimeoutError";
 
-import config from "../../../config";
-import ByteArray from "../../../shared/ByteArray";
-import NativeAppService from "../../services/NativeAppService";
-import tokenSigningResponse from "../../../shared/tokenSigningResponse";
 import {
   TokenSigningCertResponse,
   TokenSigningErrorResponse,
 } from "../../../models/TokenSigning/TokenSigningResponse";
-import { throwAfterTimeout } from "../../../shared/utils";
+
+import ByteArray from "../../../shared/ByteArray";
+import NativeAppService from "../../services/NativeAppService";
+import config from "../../../config";
 import errorToResponse from "./errorToResponse";
 import threeLetterLanguageCodes from "./threeLetterLanguageCodes";
+import { throwAfterTimeout } from "../../../shared/utils/timing";
+import tokenSigningResponse from "../../../shared/tokenSigningResponse";
 
 export default async function getCertificate(
   nonce: string,
@@ -59,36 +62,28 @@ export default async function getCertificate(
   try {
     const nativeAppStatus = await nativeAppService.connect();
 
-    console.log("Get certificate: connected to native", nativeAppStatus);
+    config.DEBUG && console.log("Get certificate: connected to native", nativeAppStatus);
 
-    const certificateResponse = await Promise.race([
-      nativeAppService.send({
-        command: "get-signing-certificate",
+    const message: NativeGetSigningCertificateRequest = {
+      command: "get-signing-certificate",
 
-        arguments: {
-          "origin": (new URL(sourceUrl)).origin,
+      arguments: {
+        origin: (new URL(sourceUrl)).origin,
 
-          ...(lang ? { lang } : {}),
-        },
-      }),
-
-      throwAfterTimeout(config.TOKEN_SIGNING_USER_INTERACTION_TIMEOUT, new UserTimeoutError()),
-    ]) as {
-      certificate: string;
-      error?: string;
-
-      "supported-signature-algos": Array<{
-        "crypto-algo": string;
-        "hash-algo": string;
-        "padding-algo": string;
-      }>;
+        ...(lang ? { lang } : {}),
+      },
     };
 
-    if (!certificateResponse.certificate) {
+    const response = await Promise.race([
+      nativeAppService.send<NativeGetSigningCertificateResponse>(message),
+      throwAfterTimeout(config.TOKEN_SIGNING_USER_INTERACTION_TIMEOUT, new UserTimeoutError()),
+    ]);
+
+    if (!response?.certificate) {
       return tokenSigningResponse<TokenSigningErrorResponse>("no_certificates", nonce);
     } else {
       return tokenSigningResponse<TokenSigningCertResponse>("ok", nonce, {
-        cert: new ByteArray().fromBase64(certificateResponse.certificate).toHex(),
+        cert: new ByteArray().fromBase64(response.certificate).toHex(),
       });
     }
   } catch (error) {

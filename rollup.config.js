@@ -1,5 +1,19 @@
-import resolve from "@rollup/plugin-node-resolve";
+import path from "path";
+
+import alias from "@rollup/plugin-alias";
+import cleanup from "rollup-plugin-cleanup";
+import injectProcessEnv from "rollup-plugin-inject-process-env";
+import license from "rollup-plugin-license";
 import polyfill from "rollup-plugin-polyfill";
+import resolve from "@rollup/plugin-node-resolve";
+
+const projectRootDir = path.resolve(__dirname);
+
+const libraryAlias = alias({
+  entries: [
+    { find: "@web-eid.js", replacement: path.resolve(projectRootDir, "dist/lib/web-eid.js/src") },
+  ],
+});
 
 export default [
   ...["content", "background"].map((name) => ({
@@ -14,8 +28,23 @@ export default [
     ],
 
     plugins: [
-      resolve(),
+      libraryAlias,
+      resolve({ rootDir: "./dist" }),
       polyfill(["webextension-polyfill"]),
+      cleanup({ comments: ["jsdoc"] }), // Keep jsdoc comments
+      injectProcessEnv({
+        DEBUG:                                 process.env.DEBUG,
+        TOKEN_SIGNING_BACKWARDS_COMPATIBILITY: process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY,
+      }),
+      license({
+        banner: {
+          content: {
+            // eslint-disable-next-line no-undef
+            file:     path.join(__dirname, "LICENSE"),
+            encoding: "utf-8",
+          },
+        },
+      }),
     ],
 
     context: "window",
@@ -33,7 +62,19 @@ export default [
     ],
 
     plugins: [
-      resolve(),
+      libraryAlias,
+      resolve({ rootDir: "./dist" }),
+      cleanup({ comments: ["jsdoc"] }),
+      injectProcessEnv(),
+      license({
+        banner: {
+          content: {
+            // eslint-disable-next-line no-undef
+            file:     path.join(__dirname, "LICENSE"),
+            encoding: "utf-8",
+          },
+        },
+      }),
     ],
 
     context: "window",

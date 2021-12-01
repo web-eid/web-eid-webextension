@@ -20,10 +20,10 @@
  * SOFTWARE.
  */
 
-import WebRequest from "./Browser/WebRequest";
-import Runtime from "./Browser/Runtime";
 import Permissions from "./Browser/Permissions";
+import Runtime from "./Browser/Runtime";
 import Tabs from "./Browser/Tabs";
+import WebRequest from "./Browser/WebRequest";
 
 declare global {
   const browser: Browser;

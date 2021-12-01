@@ -21,25 +21,28 @@
  */
 
 import {
-  TokenSigningMessage,
+  TokenSigningCertResponse,
+  TokenSigningResponse,
+} from "../../models/TokenSigning/TokenSigningResponse";
+import {
   TokenSigningGetCertificateMessage,
+  TokenSigningMessage,
   TokenSigningSignMessage,
   TokenSigningVersionMessage,
 } from "../../models/TokenSigning/TokenSigningMessage";
+
 import TokenSigningPromise from "../../models/TokenSigning/TokenSigningPromise";
-import { TokenSigningCertResponse, TokenSigningResponse } from "../../models/TokenSigning/TokenSigningResponse";
-import TypedMap from "../../models/TypedMap";
 
 declare global {
   interface Window {
-    TokenSigning: Function;
+    TokenSigning: unknown;
   }
 }
 
 export default function pageScript(): void {
   let hasDeprecationWarningDisplayed = false;
 
-  const eidPromises: TypedMap<TokenSigningPromise> = {};
+  const eidPromises: Record<string, TokenSigningPromise> = {};
 
   // Turn the incoming message from extension
   // into pending Promise resolving

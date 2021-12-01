@@ -20,16 +20,18 @@
  * SOFTWARE.
  */
 
-import NativeUnavailableError from "@web-eid/web-eid-library/errors/NativeUnavailableError";
-import libraryConfig from "@web-eid/web-eid-library/config";
-import { deserializeError } from "@web-eid/web-eid-library/utils/errorSerializer";
+import { NativeRequest } from "@web-eid.js/models/message/NativeRequest";
+import NativeUnavailableError from "@web-eid.js/errors/NativeUnavailableError";
+import { deserializeError } from "@web-eid.js/utils/errorSerializer";
+import libraryConfig from "@web-eid.js/config";
 
-import config from "../../config";
 import Mutex from "../../shared/Mutex";
-import { objectByteSize } from "../../shared/utils";
-import { NativeAppMessage } from "../../models/NativeAppMessage";
+import calculateJsonSize from "../../shared/utils/calculateJsonSize";
+import config from "../../config";
 
-type NativeAppPendingRequest = { reject?: Function; resolve?: Function } | null;
+type NativeAppPendingRequest =
+  | { resolve?: (value: any | PromiseLike<any>) => void; reject?: (reason?: any) => void }
+  | null;
 
 export enum NativeAppState {
   UNINITIALIZED,
@@ -82,19 +84,19 @@ export default class NativeAppService {
   }
 
   close(error?: any): void {
-    console.log("Disconnecting from native app");
+    config.DEBUG && console.log("Disconnecting from native app");
     this.state = NativeAppState.DISCONNECTED;
 
     this.pending?.reject?.(error);
     this.pending = null;
   }
 
-  async send<T extends any>(message: NativeAppMessage): Promise<T> {
+  async send<T>(message: NativeRequest): Promise<T> {
     if (message.command == "quit") return {} as T;
 
     switch (this.state) {
       case NativeAppState.CONNECTED: {
-        const releaseLock: Function = await commandMutex.acquire();
+        const releaseLock = await commandMutex.acquire();
 
         const sendPromise = new Promise<T>((resolve, reject) => {
           this.pending = { resolve, reject };
@@ -109,9 +111,9 @@ export default class NativeAppService {
             }
           };
 
-          console.log("Sending message to native app", JSON.stringify(message));
+          config.DEBUG && console.log("Sending message to native app", JSON.stringify(message));
 
-          const messageSize = objectByteSize(message);
+          const messageSize = calculateJsonSize(message);
 
           if (messageSize > config.NATIVE_MESSAGE_MAX_BYTES) {
             throw new Error(`native application message exceeded ${config.NATIVE_MESSAGE_MAX_BYTES} bytes`);

@@ -20,17 +20,26 @@
  * SOFTWARE.
  */
 
-import TypedMap from "../models/TypedMap";
-import config from "../config";
 import {
   TokenSigningResponse,
   TokenSigningResult,
 } from "../models/TokenSigning/TokenSigningResponse";
 
+import config from "../config";
+
+/**
+ * Helper function to compose a token signing response message
+ *
+ * @param result Token signing result from the native application
+ * @param nonce  The nonce related to the action
+ * @param optional Optional message fields to be included in the response
+ *
+ * @returns A token signing response object
+ */
 export default function tokenSigningResponse<T extends TokenSigningResponse>(
   result: TokenSigningResult,
   nonce: string,
-  optional?: TypedMap<any>
+  optional?: Record<string, any>
 ): T {
   const response = {
     nonce,

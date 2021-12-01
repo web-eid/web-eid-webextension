@@ -20,6 +20,47 @@
  * SOFTWARE.
  */
 
-export default interface TypedMap<T> {
-  [key: string]: T;
+import Action from "@web-eid.js/models/Action";
+import { serializeError } from "@web-eid.js/utils/errorSerializer";
+
+import NativeAppService from "../services/NativeAppService";
+import config from "../../config";
+
+export default async function status(): Promise<any> {
+  const extension = config.VERSION;
+  const nativeAppService = new NativeAppService();
+
+  try {
+
+    const status = await nativeAppService.connect();
+
+    const nativeApp = (
+      status.version.startsWith("v")
+        ? status.version.substring(1)
+        : status.version
+    );
+
+    await nativeAppService.send({
+      command:   "quit",
+      arguments: {},
+    });
+
+    return {
+      action: Action.STATUS_SUCCESS,
+
+      extension,
+      nativeApp,
+    };
+  } catch (error: any) {
+    error.extension = extension;
+
+    console.error("Status:", error);
+
+    return {
+      action: Action.STATUS_FAILURE,
+      error:  serializeError(error),
+    };
+  } finally {
+    nativeAppService.close();
+  }
 }

@@ -81,6 +81,7 @@ export type TransportWeaknessReasons = "cipher";
 export type OnHeadersReceivedOptions = "blocking" | "responseHeaders";
 
 export default interface WebRequest {
+  [x: string]: any;
   /**
    *
    * @param requestId ID of the request for which you want security info.

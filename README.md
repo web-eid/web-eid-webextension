@@ -41,9 +41,14 @@ APIs, like the smart card subsystem.
     SOURCE_DATE_EPOCH=$(cat ../previous-build/dist/firefox/SOURCE_DATE_EPOCH) npm run clean build package
     ```
 
-    For the **experimental** origin certificate validation feature, which uses the webRequest API and is only available in Firefox, set the `ORIGIN_CERTIFICATE_VALIDATION` environment variable to `true`.
+    For backwards compatibility with TokenSigning API, set the `TOKEN_SIGNING_BACKWARDS_COMPATIBILITY` environment variable to `true`.
     ```bash
-    ORIGIN_CERTIFICATE_VALIDATION=true npm run clean build package
+    TOKEN_SIGNING_BACKWARDS_COMPATIBILITY=true npm run clean build package
+    ```
+
+    During development, for additional logging, set the `DEBUG` environment variable to `true`.
+    ```bash
+    DEBUG=true npm run clean build package
     ```
 
 5. Load in Firefox as a Temporary Extension
