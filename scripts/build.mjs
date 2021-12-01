@@ -7,9 +7,7 @@ import {
   rem,
   pkg,
   write,
-  updateJson,
   getSourceDateEpoch,
-  isOriginCertificateValidationEnabled,
 } from "./build-utils.mjs";
 
 let sourceDateEpoch;
@@ -27,7 +25,6 @@ const targets = {
       "Compiling TypeScript files to ES6 modules"
     );
     await exec("npx", ["tsc"]);
-    await replace("./dist/firefox/config.js", "{{package.version}}", pkg.version);
   },
 
   async bundle() {
@@ -40,10 +37,17 @@ const targets = {
   async build() {
     await this.compile();
 
+    await replace("./dist/src/config.js", "{{package.version}}", pkg.version);
+
+    rem(
+      "Preparing the Firefox dist directory"
+    )
+    await cp("./dist/src", "./dist/firefox");
+
     rem(
       "Preparing the Safari dist directory"
     )
-    await cp("./dist/firefox", "./dist/safari");
+    await cp("./dist/src", "./dist/safari");
     await cp("./dist/safari/background-safari", "./dist/safari/background");
     await rm("./dist/safari/background-safari");
 
@@ -53,6 +57,8 @@ const targets = {
       "Removing files compiled by the TypeScript compiler",
       "Keeping only files bundled by Rollup"
     );
+    await rm("./dist/lib");
+    await rm("./dist/src");
     await rm("./dist/firefox/*/");
     await rm("./dist/firefox/config.*");
     await rm("./dist/safari/*/");
@@ -84,13 +90,6 @@ const targets = {
     );
     await cp("./static/firefox/manifest.json", "./dist/firefox/manifest.json");
     await replace("./dist/firefox/manifest.json", "{{package.version}}", pkg.version);
-
-    if (isOriginCertificateValidationEnabled()) {
-      updateJson(
-        "./dist/firefox/manifest.json",
-        (manifest) => ({...manifest, permissions: [...manifest.permissions, "webRequest", "webRequestBlocking"]})
-      )
-    }
 
     rem(
       "Setting up the Chrome manifest"

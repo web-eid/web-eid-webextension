@@ -1,0 +1,3 @@
+[submodule "lib/web-eid.js"]
+	path = lib/web-eid.js
+	url = ../web-eid.js

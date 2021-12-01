@@ -20,8 +20,9 @@
  * SOFTWARE.
  */
 
-import ErrorCode from "@web-eid/web-eid-library/errors/ErrorCode";
-import { serializeError } from "@web-eid/web-eid-library/utils/errorSerializer";
+import ErrorCode from "@web-eid.js/errors/ErrorCode";
+import { serializeError } from "@web-eid.js/utils/errorSerializer";
+
 import { TokenSigningErrorResponse } from "../../../models/TokenSigning/TokenSigningResponse";
 import tokenSigningResponse from "../../../shared/tokenSigningResponse";
 

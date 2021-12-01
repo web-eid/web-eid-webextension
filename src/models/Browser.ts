@@ -20,9 +20,8 @@
  * SOFTWARE.
  */
 
-import WebRequest from "./Browser/WebRequest";
-import Runtime from "./Browser/Runtime";
 import Permissions from "./Browser/Permissions";
+import Runtime from "./Browser/Runtime";
 import Tabs from "./Browser/Tabs";
 
 declare global {
@@ -31,15 +30,6 @@ declare global {
 }
 
 export default interface Browser {
-  /**
-   * Add event listeners for the various stages of making an HTTP request,
-   * which includes websocket requests on ws:// and wss://.
-   * The event listener receives detailed information about the request and can modify or cancel the request.
-   *
-   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/webRequest
-   */
-  webRequest: WebRequest;
-
   /**
    * This module provides information about your extension and the environment it's running in.
    *

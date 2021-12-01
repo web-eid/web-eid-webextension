@@ -32,6 +32,10 @@ export default Object.freeze({
    */
   NATIVE_GRACEFUL_DISCONNECT_TIMEOUT: 2000, // 2 seconds
 
-  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  true,
+  // Default: false
+  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY?.toUpperCase() === "TRUE",
   TOKEN_SIGNING_USER_INTERACTION_TIMEOUT: 1000 * 60 * 5, // 5 minutes
+
+  // Default: false
+  DEBUG: process.env.DEBUG?.toUpperCase() === "TRUE",
 });

@@ -20,17 +20,16 @@
  * SOFTWARE.
  */
 
-import { CertificateInfo } from "./Browser/WebRequest";
-import TypedMap from "./TypedMap";
+/**
+ * Calculates the size of an object's JSON representation in bytes
+ *
+ * @param object Any JSON stringifyable object
+ *
+ * @returns Size in bytes
+ */
+export default function calculateJsonSize(object: any): number {
+  const objectString = JSON.stringify(object);
+  const objectStringBlob = new Blob([objectString]);
 
-export default interface HttpResponse<T> {
-  readonly certificateInfo?: CertificateInfo | null;
-  readonly body: T;
-  readonly headers: TypedMap<string>;
-  readonly ok: boolean;
-  readonly redirected: boolean;
-  readonly status: number;
-  readonly statusText: string;
-  readonly type: ResponseType;
-  readonly url: string;
+  return objectStringBlob.size;
 }

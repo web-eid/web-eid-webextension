@@ -1,12 +1,12 @@
 module.exports = {
   env: {
-    "browser": true,
-    "es6": true,
+    "browser":       true,
+    "es6":           true,
     "webextensions": true,
-    "node": true
+    "node":          true,
   },
-  root: true,
-  parser: "@typescript-eslint/parser",
+  root:    true,
+  parser:  "@typescript-eslint/parser",
   plugins: [
     "@typescript-eslint",
   ],
@@ -16,15 +16,16 @@ module.exports = {
     "plugin:@typescript-eslint/recommended",
   ],
   rules: {
-    "quotes": "error",
-    "semi": "off",
-    "key-spacing": ["error", { "align": "value" }],
-    "comma-dangle": ["error", "always-multiline"],
-    "object-curly-spacing": ["error", "always"],
-    "array-bracket-spacing": "error",
-    "indent": "off",
-    "@typescript-eslint/indent": ["error", 2],
-    "@typescript-eslint/semi": ["error"],
+    "quotes":                             "error",
+    "semi":                               "off",
+    "key-spacing":                        ["error", { "align": "value" }],
+    "comma-dangle":                       ["error", "always-multiline"],
+    "object-curly-spacing":               ["error", "always"],
+    "array-bracket-spacing":              "error",
+    "indent":                             "off",
+    "@typescript-eslint/indent":          ["error", 2],
+    "@typescript-eslint/semi":            ["error"],
     "@typescript-eslint/no-explicit-any": "off",
+    "sort-imports":                       ["error", { allowSeparatedGroups: true }],
   },
 };

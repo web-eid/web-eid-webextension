@@ -8,9 +8,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
     - uses: actions/setup-node@v1
       with:
         node-version: '14.x'
+
     - name: Cache Node.js modules
       uses: actions/cache@v2
       with:
@@ -20,12 +24,16 @@ jobs:
         restore-keys: |
           ${{ runner.OS }}-node-
           ${{ runner.OS }}-
+
     - name: Install dependencies
       run: npm ci
+
     - name: Build
       run: |
         export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
+        export TOKEN_SIGNING_BACKWARDS_COMPATIBILITY=true
         npm run clean build package
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:

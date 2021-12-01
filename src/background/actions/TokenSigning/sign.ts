@@ -20,20 +20,23 @@
  * SOFTWARE.
  */
 
-import UserTimeoutError from "@web-eid/web-eid-library/errors/UserTimeoutError";
+import { NativeSignRequest } from "@web-eid.js/models/message/NativeRequest";
+import { NativeSignResponse } from "@web-eid.js/models/message/NativeResponse";
+import UserTimeoutError from "@web-eid.js/errors/UserTimeoutError";
 
-import config from "../../../config";
+import {
+  TokenSigningErrorResponse,
+  TokenSigningSignResponse,
+} from "../../../models/TokenSigning/TokenSigningResponse";
+
 import ByteArray from "../../../shared/ByteArray";
 import NativeAppService from "../../services/NativeAppService";
-import tokenSigningResponse from "../../../shared/tokenSigningResponse";
-import {
-  TokenSigningSignResponse,
-  TokenSigningErrorResponse,
-} from "../../../models/TokenSigning/TokenSigningResponse";
-import { throwAfterTimeout } from "../../../shared/utils";
-import errorToResponse from "./errorToResponse";
+import config from "../../../config";
 import digestCommands from "./digestCommands";
+import errorToResponse from "./errorToResponse";
 import threeLetterLanguageCodes from "./threeLetterLanguageCodes";
+import { throwAfterTimeout } from "../../../shared/utils/timing";
+import tokenSigningResponse from "../../../shared/tokenSigningResponse";
 
 export default async function sign(
   nonce: string,
@@ -52,29 +55,31 @@ export default async function sign(
   try {
     const nativeAppStatus = await nativeAppService.connect();
 
-    console.log("Sign: connected to native", nativeAppStatus);
+    config.DEBUG && console.log("Sign: connected to native", nativeAppStatus);
 
-    const signatureResponse = await Promise.race([
-      nativeAppService.send({
-        command: "sign",
+    const message: NativeSignRequest = {
+      command: "sign",
 
-        arguments: {
-          "doc-hash":      new ByteArray().fromHex(hash).toBase64(),
-          "hash-algo":     Object.keys(digestCommands).includes(algorithm) ? digestCommands[algorithm] : algorithm,
-          "origin":        (new URL(sourceUrl)).origin,
-          "user-eid-cert": new ByteArray().fromHex(certificate).toBase64(),
+      arguments: {
+        hash:         new ByteArray().fromHex(hash).toBase64(),
+        hashFunction: Object.keys(digestCommands).includes(algorithm) ? digestCommands[algorithm] : algorithm,
+        origin:       (new URL(sourceUrl)).origin,
+        certificate:  new ByteArray().fromHex(certificate).toBase64(),
 
-          ...(lang ? { lang } : {}),
-        },
-      }),
+        ...(lang ? { lang } : {}),
+      },
+    };
+
+    const response = await Promise.race([
+      nativeAppService.send<NativeSignResponse>(message),
       throwAfterTimeout(config.TOKEN_SIGNING_USER_INTERACTION_TIMEOUT, new UserTimeoutError()),
-    ]) as { signature: string; error: string };
+    ]);
 
-    if (!signatureResponse.signature) {
+    if (!response?.signature) {
       return tokenSigningResponse<TokenSigningErrorResponse>("technical_error", nonce);
     } else {
       return tokenSigningResponse<TokenSigningSignResponse>("ok", nonce, {
-        signature: new ByteArray().fromBase64(signatureResponse.signature).toHex(),
+        signature: new ByteArray().fromBase64(response.signature).toHex(),
       });
     }
   } catch (error) {

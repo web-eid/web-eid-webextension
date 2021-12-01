@@ -20,16 +20,17 @@
  * SOFTWARE.
  */
 
-import NativeUnavailableError from "@web-eid/web-eid-library/errors/NativeUnavailableError";
-import UnknownError from "@web-eid/web-eid-library/errors/UnknownError";
-import { deserializeError } from "@web-eid/web-eid-library/utils/errorSerializer";
+import NativeUnavailableError from "@web-eid.js/errors/NativeUnavailableError";
+import UnknownError from "@web-eid.js/errors/UnknownError";
+import { deserializeError } from "@web-eid.js/utils/errorSerializer";
+import libraryConfig from "@web-eid.js/config";
 
-import libraryConfig from "@web-eid/web-eid-library/config";
-
-import config from "../../config";
+import { NativeFailureResponse } from "@web-eid.js/models/message/NativeResponse";
+import { NativeRequest } from "@web-eid.js/models/message/NativeRequest";
 import { Port } from "../../models/Browser/Runtime";
-import { objectByteSize, throwAfterTimeout } from "../../shared/utils";
-import { NativeAppMessage } from "../../models/NativeAppMessage";
+import calculateJsonSize from "../../shared/utils/calculateJsonSize";
+import config from "../../config";
+import { throwAfterTimeout } from "../../shared/utils/timing";
 
 type UnwrappedPromise
   = { resolve: (value?: any) => void; reject: (reason?: any) => void }
@@ -90,7 +91,7 @@ export default class NativeAppService {
   }
 
   async disconnectListener(): Promise<void> {
-    console.log("disconnectListener");
+    config.DEBUG && console.log("Native app disconnected");
     // Accessing lastError when it exists stops chrome from throwing it unnecessarily.
     chrome?.runtime?.lastError;
 
@@ -118,13 +119,13 @@ export default class NativeAppService {
     this.disconnectForcefully();
   }
 
-  send<T extends any>(message: NativeAppMessage): Promise<T> {
+  send<T>(message: NativeRequest): Promise<T> {
     switch (this.state) {
       case NativeAppState.CONNECTED: {
         return new Promise((resolve, reject) => {
           this.pending = { resolve, reject };
 
-          const onResponse = async (message: any): Promise<void> => {
+          const onResponse = async (message: T): Promise<void> => {
             this.port?.onMessage.removeListener(onResponse);
 
             try {
@@ -141,8 +142,10 @@ export default class NativeAppService {
               this.disconnectForcefully();
 
             } finally {
-              if (message.error) {
-                reject(deserializeError(message.error));
+              const error = (message as unknown as NativeFailureResponse)?.error;
+
+              if (error) {
+                reject(deserializeError(error));
               } else {
                 resolve(message);
               }
@@ -153,9 +156,9 @@ export default class NativeAppService {
 
           this.port?.onMessage.addListener(onResponse);
 
-          console.log("Sending message to native app", JSON.stringify(message));
+          config.DEBUG && console.log("Sending message to native app", JSON.stringify(message));
 
-          const messageSize = objectByteSize(message);
+          const messageSize = calculateJsonSize(message);
 
           if (messageSize > config.NATIVE_MESSAGE_MAX_BYTES) {
             throw new Error(`native application message exceeded ${config.NATIVE_MESSAGE_MAX_BYTES} bytes`);
@@ -193,7 +196,7 @@ export default class NativeAppService {
 
   nextMessage(timeout: number): Promise<any> {
     return new Promise((resolve, reject) => {
-      let cleanup: Function | null = null;
+      let cleanup: (() => void) | null = null;
       let timer: ReturnType<typeof setTimeout> | null = null;
 
       const onMessageListener = (message: any): void => {

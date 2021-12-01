@@ -20,15 +20,18 @@
  * SOFTWARE.
  */
 
-import NativeAppService from "../../services/NativeAppService";
-import tokenSigningResponse from "../../../shared/tokenSigningResponse";
+import { NativeQuitRequest } from "@web-eid.js/models/message/NativeRequest";
+
 import {
   TokenSigningErrorResponse,
   TokenSigningStatusResponse,
 } from "../../../models/TokenSigning/TokenSigningResponse";
-import errorToResponse from "./errorToResponse";
 
-export default async function getStatus(
+import NativeAppService from "../../services/NativeAppService";
+import errorToResponse from "./errorToResponse";
+import tokenSigningResponse from "../../../shared/tokenSigningResponse";
+
+export default async function status(
   nonce: string,
 ): Promise<TokenSigningStatusResponse | TokenSigningErrorResponse> {
   const nativeAppService = new NativeAppService();
@@ -43,10 +46,12 @@ export default async function getStatus(
       throw new Error("missing native application version");
     }
 
-    await nativeAppService.send({
+    const message: NativeQuitRequest = {
       command:   "quit",
       arguments: {},
-    });
+    };
+
+    await nativeAppService.send(message);
 
     return tokenSigningResponse<TokenSigningStatusResponse>("ok", nonce, { version });
   } catch (error) {

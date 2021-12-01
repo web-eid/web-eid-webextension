@@ -1,6 +1,6 @@
 {
   "name": "web-eid-webextension",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "package": "node scripts/build.mjs package",
     "compile": "node scripts/build.mjs compile",
     "bundle": "node scripts/build.mjs bundle",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest -i --silent --verbose"
   },
   "repository": {
     "type": "git",
@@ -19,18 +19,21 @@
   "author": "Tanel Metsar",
   "license": "MIT",
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^7.1.3",
-    "@typescript-eslint/eslint-plugin": "^2.31.0",
-    "@typescript-eslint/parser": "^2.31.0",
-    "@web-eid/web-eid-library": "^1.0.0",
-    "archiver": "^4.0.2",
-    "eslint": "^7.32.0",
-    "fs-extra": "^9.0.1",
-    "glob": "^7.1.6",
-    "rollup": "^2.8.2",
+    "@rollup/plugin-alias": "^3.1.8",
+    "@rollup/plugin-node-resolve": "^13.0.6",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "archiver": "^5.3.0",
+    "eslint": "^8.2.0",
+    "fs-extra": "^10.0.0",
+    "glob": "^7.2.0",
+    "rollup": "^2.60.0",
+    "rollup-plugin-cleanup": "^3.2.1",
+    "rollup-plugin-inject-process-env": "^1.3.1",
+    "rollup-plugin-license": "^2.6.0",
     "rollup-plugin-polyfill": "^3.0.0",
-    "typescript": "^3.8.3",
-    "webextension-polyfill": "^0.6.0"
+    "typescript": "^4.5.2",
+    "webextension-polyfill": "^0.8.0"
   },
   "dependencies": {}
 }
