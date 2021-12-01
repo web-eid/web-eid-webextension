@@ -20,44 +20,49 @@
  * SOFTWARE.
  */
 
-import Action from "@web-eid/web-eid-library/models/Action";
-import libraryConfig from "@web-eid/web-eid-library/config";
+import Action from "@web-eid.js/models/Action";
+import { ExtensionRequest } from "@web-eid.js/models/message/ExtensionRequest";
+import libraryConfig from "@web-eid.js/config";
 
-import { LibraryMessage } from "../models/LibraryMessage";
 import { MessageSender } from "../models/Browser/Runtime";
-import authenticate from "./actions/authenticate";
-import sign from "./actions/sign";
-import getStatus from "./actions/getStatus";
-
-import { TokenSigningMessage } from "../models/TokenSigning/TokenSigningMessage";
 import TokenSigningAction from "./actions/TokenSigning";
+import { TokenSigningMessage } from "../models/TokenSigning/TokenSigningMessage";
+import authenticate from "./actions/authenticate";
+import getSigningCertificate from "./actions/getSigningCertificate";
+import sign from "./actions/sign";
+import status from "./actions/status";
 
-async function onAction(message: LibraryMessage, sender: MessageSender): Promise<void | object> {
+async function onAction(message: ExtensionRequest, sender: MessageSender): Promise<void | object> {
   switch (message.action) {
     case Action.AUTHENTICATE:
       return await authenticate(
-        message.getAuthChallengeUrl,
-        message.postAuthTokenUrl,
-        message.headers,
-        message.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
-        message.serverRequestTimeout   || libraryConfig.DEFAULT_SERVER_REQUEST_TIMEOUT,
+        message.challengeNonce,
+
         sender,
-        message.lang,
+        message.options?.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
+        message.options?.lang
+      );
+
+    case Action.GET_SIGNING_CERTIFICATE:
+      return await getSigningCertificate(
+        sender,
+        message.options?.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
+        message.options?.lang
       );
 
     case Action.SIGN:
       return await sign(
-        message.postPrepareSigningUrl,
-        message.postFinalizeSigningUrl,
-        message.headers,
-        message.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
-        message.serverRequestTimeout   || libraryConfig.DEFAULT_SERVER_REQUEST_TIMEOUT,
+        message.certificate,
+        message.hash,
+        message.hashFunction,
+
         sender,
-        message.lang,
+        message.options?.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
+        message.options?.lang
       );
 
     case Action.STATUS:
-      return await getStatus();
+      return await status();
   }
 }
 
@@ -66,7 +71,7 @@ async function onTokenSigningAction(message: TokenSigningMessage, sender: Messag
 
   switch (message.type) {
     case "VERSION": {
-      return await TokenSigningAction.getStatus(
+      return await TokenSigningAction.status(
         message.nonce,
       );
     }
@@ -94,7 +99,7 @@ async function onTokenSigningAction(message: TokenSigningMessage, sender: Messag
 }
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if ((message as LibraryMessage).action) {
+  if ((message as ExtensionRequest).action) {
     onAction(message, sender).then(sendResponse);
   } else if ((message as TokenSigningMessage).type) {
     onTokenSigningAction(message, sender).then(sendResponse);

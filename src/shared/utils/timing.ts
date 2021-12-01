@@ -20,34 +20,34 @@
  * SOFTWARE.
  */
 
-import Action from "@web-eid/web-eid-library/models/Action";
-import TypedMap from "./TypedMap";
-
-export type LibraryMessage
-  = StatusRequestMessage
-  | AuthenticateRequestMessage
-  | SignRequestMessage;
-
-export interface StatusRequestMessage extends Object {
-  action: Action.STATUS;
+/**
+ * Sleeps for a specified time before resolving the returned promise.
+ *
+ * @param milliseconds Time in milliseconds until the promise is resolved
+ *
+ * @returns Empty promise
+ */
+export function sleep(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), milliseconds);
+  });
 }
 
-export interface AuthenticateRequestMessage extends Object {
-  action: Action.AUTHENTICATE;
-  getAuthChallengeUrl: string;
-  postAuthTokenUrl: string;
-  headers: TypedMap<string>;
-  userInteractionTimeout: number;
-  serverRequestTimeout: number;
-  lang?: string;
-}
-
-export interface SignRequestMessage extends Object {
-  action: Action.SIGN;
-  postPrepareSigningUrl: string;
-  postFinalizeSigningUrl: string;
-  headers: TypedMap<string>;
-  userInteractionTimeout: number;
-  serverRequestTimeout: number;
-  lang?: string;
+/**
+ * Throws an error after a specified time has passed.
+ *
+ * Useful in combination with Promise.race(...)
+ *
+ * @param milliseconds Time in milliseconds until the promise is rejected
+ * @param error Error object which will be used to reject the promise
+ *
+ * @example
+ *   await Promise.race([
+ *     doAsyncOperation(),
+ *     throwAfterTimeout(3600, new TimeoutError()),
+ *   ])
+ */
+export async function throwAfterTimeout(milliseconds: number, error: Error): Promise<void> {
+  await sleep(milliseconds);
+  throw error;
 }

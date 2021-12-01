@@ -21,6 +21,14 @@
  */
 
 export default interface Runtime {
+  /**
+   * A string representing the extension ID.
+   *
+   * If the extension specifies an ID in its browser_specific_settings manifest.json key, runtime.id contains that value.
+   * Otherwise, runtime.id  contains the ID that was generated for the extension.
+   */
+  id: string;
+
   onMessage: {
     addListener: (callback: OnMessageCallback) => void;
   };
@@ -93,12 +101,12 @@ export interface Port {
   disconnect: () => void;
   error: Error;
   onDisconnect: {
-    addListener:    (listener: Function) => void;
-    removeListener: (listener: Function) => void;
+    addListener:    (listener: () => void) => void;
+    removeListener: (listener: () => void) => void;
   };
   onMessage: {
-    addListener:    (listener: Function) => void;
-    removeListener: (listener: Function) => void;
+    addListener:    (listener: (message: any) => void) => void;
+    removeListener: (listener: (message: any) => void) => void;
   };
   postMessage: (message: object) => void;
 

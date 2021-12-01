@@ -1,5 +1,3 @@
-import TypedMap from "../../../models/TypedMap";
-
 /**
  * Map of ISO 639-2 three-letter language codes to ISO 639-1 two-letter language codes.
  *
@@ -14,4 +12,4 @@ export default {
   "lit": "lt",
   "lat": "lv",
   "tur": "tr",
-} as TypedMap<string>;
+} as Record<string, string>;

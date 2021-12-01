@@ -20,12 +20,12 @@
  * SOFTWARE.
  */
 
-import getStatus from "./getStatus";
 import getCertificate from "./getCertificate";
 import sign from "./sign";
+import status from "./status";
 
 export default {
-  getStatus,
+  status,
   getCertificate,
   sign,
 };

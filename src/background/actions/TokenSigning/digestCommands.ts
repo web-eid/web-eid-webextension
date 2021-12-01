@@ -1,5 +1,3 @@
-import TypedMap from "../../../models/TypedMap";
-
 /**
  * Map of OpenSSL digest commands to digest algorithm names.
  *
@@ -16,4 +14,4 @@ export default {
   "sha3-256": "SHA3-256",
   "sha3-384": "SHA3-384",
   "sha3-512": "SHA3-512",
-} as TypedMap<string>;
+} as Record<string, string>;

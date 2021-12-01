@@ -20,185 +20,73 @@
  * SOFTWARE.
  */
 
-import Action from "@web-eid/web-eid-library/models/Action";
-import ProtocolInsecureError from "@web-eid/web-eid-library/errors/ProtocolInsecureError";
-import UserTimeoutError from "@web-eid/web-eid-library/errors/UserTimeoutError";
-import ServerTimeoutError from "@web-eid/web-eid-library/errors/ServerTimeoutError";
-import OriginMismatchError from "@web-eid/web-eid-library/errors/OriginMismatchError";
-import { serializeError } from "@web-eid/web-eid-library/utils/errorSerializer";
+import {
+  ExtensionFailureResponse,
+  ExtensionSignResponse,
+} from "@web-eid.js/models/message/ExtensionResponse";
 
-import NativeAppService from "../services/NativeAppService";
-import WebServerService from "../services/WebServerService";
-import HttpResponse from "../../models/HttpResponse";
-import TypedMap from "../../models/TypedMap";
-import { pick, throwAfterTimeout, isSameOrigin } from "../../shared/utils";
+import Action from "@web-eid.js/models/Action";
+import { NativeSignRequest } from "@web-eid.js/models/message/NativeRequest";
+import { NativeSignResponse } from "@web-eid.js/models/message/NativeResponse";
+import UnknownError from "@web-eid.js/errors/UnknownError";
+import UserTimeoutError from "@web-eid.js/errors/UserTimeoutError";
+import { serializeError } from "@web-eid.js/utils/errorSerializer";
+
 import { MessageSender } from "../../models/Browser/Runtime";
+import NativeAppService from "../services/NativeAppService";
+import config from "../../config";
+import { getSenderUrl } from "../../shared/utils/sender";
+import { throwAfterTimeout } from "../../shared/utils/timing";
+
 
 export default async function sign(
-  postPrepareSigningUrl: string,
-  postFinalizeSigningUrl: string,
-  headers: TypedMap<string>,
-  userInteractionTimeout: number,
-  serverRequestTimeout: number,
+  certificate: string,
+  hash: string,
+  hashFunction: string,
   sender: MessageSender,
+  userInteractionTimeout: number,
   lang?: string,
-): Promise<object | void> {
-  let webServerService: WebServerService | undefined;
+): Promise<ExtensionSignResponse | ExtensionFailureResponse> {
   let nativeAppService: NativeAppService | undefined;
 
   try {
-    if (!postPrepareSigningUrl.startsWith("https:")) {
-      throw new ProtocolInsecureError(`HTTPS required for postPrepareSigningUrl ${postPrepareSigningUrl}`);
-    }
-
-    if (!postFinalizeSigningUrl.startsWith("https:")) {
-      throw new ProtocolInsecureError(`HTTPS required for postFinalizeSigningUrl ${postFinalizeSigningUrl}`);
-    }
-
-    if (!isSameOrigin(postPrepareSigningUrl, postFinalizeSigningUrl)) {
-      throw new OriginMismatchError();
-    }
-
-    if (!sender.tab?.id || sender.tab?.id === browser.tabs.TAB_ID_NONE) {
-      throw new Error("invalid sender tab");
-    }
-
-    webServerService = new WebServerService(sender.tab.id);
     nativeAppService = new NativeAppService();
 
-    let nativeAppStatus = await nativeAppService.connect();
+    const nativeAppStatus = await nativeAppService.connect();
 
-    console.log("Sign: connected to native", nativeAppStatus);
+    config.DEBUG && console.log("Sign: connected to native", nativeAppStatus);
 
-    const certificateResponse = await Promise.race([
-      nativeAppService.send({
-        command: "get-signing-certificate",
+    const message: NativeSignRequest = {
+      command: "sign",
 
-        arguments: {
-          "origin": (new URL(postPrepareSigningUrl)).origin,
+      arguments: {
+        hash,
+        hashFunction,
+        certificate,
 
-          ...(lang ? { lang } : {}),
-        },
-      }),
+        origin: (new URL(getSenderUrl(sender))).origin,
 
-      throwAfterTimeout(userInteractionTimeout, new UserTimeoutError()),
-    ]) as {
-      certificate: string;
-      error?: string;
-
-      "supported-signature-algos": Array<{
-        "crypto-algo":  string;
-        "hash-algo":    string;
-        "padding-algo": string;
-      }>;
-    };
-
-    if (certificateResponse.error) {
-      throw new Error(certificateResponse.error);
-    } else if (!certificateResponse.certificate) {
-      throw new Error("Missing signing certificate");
-    }
-
-    const { certificate } = certificateResponse;
-
-    const supportedSignatureAlgorithms = certificateResponse["supported-signature-algos"].map((algorithmSet) => ({
-      crypto:  algorithmSet["crypto-algo"],
-      hash:    algorithmSet["hash-algo"],
-      padding: algorithmSet["padding-algo"],
-    }));
-
-    const prepareDocumentResult = await Promise.race([
-      webServerService.fetch(postPrepareSigningUrl, {
-        method: "POST",
-
-        headers: {
-          ...headers,
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({ certificate, supportedSignatureAlgorithms }),
-      }),
-
-      throwAfterTimeout(
-        serverRequestTimeout,
-        new ServerTimeoutError(`server failed to respond in time - POST ${postPrepareSigningUrl}`),
-      ),
-    ]) as HttpResponse<{ hash: string; algorithm: string }>;
-
-    console.log("Sign: postPrepareSigningUrl fetched", prepareDocumentResult);
-
-    nativeAppService = new NativeAppService();
-    nativeAppStatus  = await nativeAppService.connect();
-
-    console.log("Sign: reconnected to native", nativeAppStatus);
-
-    const signatureResponse = await Promise.race([
-      nativeAppService.send({
-        command: "sign",
-
-        arguments: {
-          "doc-hash":      prepareDocumentResult.body.hash,
-          "hash-algo":     prepareDocumentResult.body.algorithm,
-          "origin":        (new URL(postPrepareSigningUrl)).origin,
-          "user-eid-cert": certificate,
-
-          ...(lang ? { lang } : {}),
-        },
-      }),
-
-      throwAfterTimeout(userInteractionTimeout, new UserTimeoutError()),
-    ]) as { signature: string; error: string };
-
-    if (signatureResponse.error) {
-      throw new Error(signatureResponse.error);
-    } else if (!signatureResponse.signature) {
-
-      throw new Error("Missing sign signature");
-    }
-
-    const { signature } = signatureResponse;
-
-    console.log("Sign: user signature received from native app", signature);
-
-    const signatureVerifyResponse = await Promise.race([
-      webServerService.fetch<any>(postFinalizeSigningUrl, {
-        method: "POST",
-
-        headers: {
-          ...headers,
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          ...prepareDocumentResult.body,
-          signature,
-        }),
-      }),
-
-      throwAfterTimeout(
-        serverRequestTimeout,
-        new ServerTimeoutError(`server failed to respond in time - POST ${postFinalizeSigningUrl}`),
-      ),
-    ]);
-
-    console.log("Sign: signature accepted by the server", signatureVerifyResponse);
-
-    return {
-      action: Action.SIGN_SUCCESS,
-
-      response: {
-        ...pick(signatureVerifyResponse, [
-          "body",
-          "headers",
-          "ok",
-          "redirected",
-          "status",
-          "statusText",
-          "type",
-          "url",
-        ]),
+        ...(lang ? { lang } : {}),
       },
     };
+
+    const response = await Promise.race([
+      nativeAppService.send<NativeSignResponse>(message),
+      throwAfterTimeout(userInteractionTimeout, new UserTimeoutError()),
+    ]);
+
+    const isResponseValid = (
+      response?.signature &&
+      response?.signatureAlgorithm.hashFunction &&
+      response?.signatureAlgorithm.paddingScheme &&
+      response?.signatureAlgorithm.cryptoAlgorithm
+    );
+
+    if (isResponseValid) {
+      return { action: Action.SIGN_SUCCESS, ...response };
+    } else {
+      throw new UnknownError("unexpected response from native application");
+    }
   } catch (error) {
     console.error("Sign:", error);
 

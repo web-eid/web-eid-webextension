@@ -20,15 +20,13 @@
  * SOFTWARE.
  */
 
-import Action from "@web-eid/web-eid-library/models/Action";
-import ContextInsecureError from "@web-eid/web-eid-library/errors/ContextInsecureError";
+import Action from "@web-eid.js/models/Action";
+import ContextInsecureError from "@web-eid.js/errors/ContextInsecureError";
 
-import config from "../config";
-import HttpResponse from "../models/HttpResponse";
 import { TokenSigningErrorResponse } from "../models/TokenSigning/TokenSigningResponse";
-import { headersToObject } from "../shared/utils";
-import tokenSigningResponse from "../shared/tokenSigningResponse";
+import config from "../config";
 import injectPageScript from "./TokenSigning/injectPageScript";
+import tokenSigningResponse from "../shared/tokenSigningResponse";
 
 function isWebeidEvent(event: MessageEvent): boolean {
   return (
@@ -52,7 +50,11 @@ async function send(message: object): Promise<object | void> {
 
 window.addEventListener("message", async (event) => {
   if (isWebeidEvent(event)) {
-    console.log("Web-eID event: ", event);
+    // Warning messages should be ignored.
+    // When there are deprecation warnings, these messages would be sent by the content script and handled by the Web-eID library.
+    if (event.data.action === Action.WARNING) return;
+
+    config.DEBUG && console.log("Web-eID event: ", event);
 
     if (!window.isSecureContext) {
       const response = {
@@ -83,14 +85,20 @@ window.addEventListener("message", async (event) => {
           response = await send(event.data);
           break;
         }
+
+        case Action.GET_SIGNING_CERTIFICATE: {
+          window.postMessage({ action: Action.GET_SIGNING_CERTIFICATE_ACK }, event.origin);
+          response = await send(event.data);
+          break;
+        }
       }
 
       if (response) {
         window.postMessage(response, event.origin);
       }
     }
-  } else if (isTokenSigningEvent(event)) {
-    console.log("TokenSigning event:", event);
+  } else if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY && isTokenSigningEvent(event)) {
+    config.DEBUG && console.log("TokenSigning event:", event);
 
     if (!window.isSecureContext) {
       console.error(new ContextInsecureError());
@@ -103,50 +111,6 @@ window.addEventListener("message", async (event) => {
       window.postMessage(await send(event.data), event.origin);
     }
   }
-});
-
-async function fetchProxy<T>(fetchUrl: string, init?: RequestInit): Promise<HttpResponse<T>> {
-  const response = await fetch(fetchUrl, init);
-
-  const headers = headersToObject(response.headers);
-
-  const body = (
-    headers["content-type"]?.includes("application/json")
-      ? (await response.json())
-      : (await response.text())
-  ) as T;
-
-  const {
-    ok,
-    redirected,
-    status,
-    statusText,
-    type,
-    url,
-  } = response;
-
-  return {
-    ok,
-    redirected,
-    status,
-    statusText,
-    type,
-    url,
-    headers,
-    body,
-  };
-}
-
-browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "fetch") {
-    fetchProxy(request.fetchUrl, request.init)
-      .then(sendResponse)
-      .catch(sendResponse);
-
-    return true;
-  }
-
-  return false;
 });
 
 // --[ chrome-token-signing backwards compatibility ]---------------------------

@@ -132,24 +132,8 @@ export async function getSourceDateEpoch() {
   };
 }
 
-export function isOriginCertificateValidationEnabled() {
-  return (
-    process.env.ORIGIN_CERTIFICATE_VALIDATION
-      ? process.env.ORIGIN_CERTIFICATE_VALIDATION.toUpperCase() == "TRUE"
-      : false
-  )
-}
-
 export async function write(filename, data) {
   console.log(`WRITE ${data} → ${filename}`);
 
   await fs.writeFile(filename, data);
-}
-
-export async function updateJson(filename, updateFn) {
-  console.log(`UPDATE ${filename} with ${updateFn}`);
-
-  const json = await fs.readJson(filename);
-
-  await fs.writeJson(filename, updateFn(json), { spaces: 2 });
 }
