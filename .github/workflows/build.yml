@@ -32,7 +32,7 @@ jobs:
       run: |
         export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
         export TOKEN_SIGNING_BACKWARDS_COMPATIBILITY=true
-        npm run clean build package
+        npm run test clean build package
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v2

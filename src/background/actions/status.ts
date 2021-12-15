@@ -20,14 +20,22 @@
  * SOFTWARE.
  */
 
+
+import {
+  ExtensionFailureResponse,
+  ExtensionStatusResponse,
+} from "@web-eid.js/models/message/ExtensionResponse";
+
 import Action from "@web-eid.js/models/Action";
+import VersionMismatchError from "@web-eid.js/errors/VersionMismatchError";
 import { serializeError } from "@web-eid.js/utils/errorSerializer";
 
 import NativeAppService from "../services/NativeAppService";
+import checkCompatibility from "../../shared/utils/checkCompatibility";
 import config from "../../config";
 
-export default async function status(): Promise<any> {
-  const extension = config.VERSION;
+export default async function status(libraryVersion: string): Promise<ExtensionStatusResponse | ExtensionFailureResponse> {
+  const extensionVersion = config.VERSION;
   const nativeAppService = new NativeAppService();
 
   try {
@@ -45,14 +53,26 @@ export default async function status(): Promise<any> {
       arguments: {},
     });
 
+    const componentVersions = {
+      library:   libraryVersion,
+      extension: extensionVersion,
+
+      nativeApp,
+    };
+
+    const requiresUpdate = checkCompatibility(componentVersions);
+
+    if (requiresUpdate.extension || requiresUpdate.nativeApp) {
+      throw new VersionMismatchError(undefined, componentVersions, requiresUpdate);
+    }
+
     return {
       action: Action.STATUS_SUCCESS,
 
-      extension,
-      nativeApp,
+      ...componentVersions,
     };
   } catch (error: any) {
-    error.extension = extension;
+    error.extension = extensionVersion;
 
     console.error("Status:", error);
 
