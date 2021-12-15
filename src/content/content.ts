@@ -70,7 +70,7 @@ window.addEventListener("message", async (event) => {
       switch (event.data.action) {
         case Action.STATUS: {
           window.postMessage({ action: Action.STATUS_ACK }, event.origin);
-          response = await send({ action: Action.STATUS });
+          response = await send(event.data);
           break;
         }
 

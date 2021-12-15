@@ -20,6 +20,13 @@ const targets = {
     await rm("./dist");
   },
 
+  async test() {
+    rem(
+      "Running tests"
+    );
+    await exec("jest" , ["-i", "--silent", "--verbose", "--rootDir", "./src"]);
+  },
+
   async compile() {
     rem(
       "Compiling TypeScript files to ES6 modules"

@@ -10,11 +10,12 @@
     "strict": true,
     "outDir": "dist",
     "baseUrl": ".",
+    "esModuleInterop": true,
     "paths": {
       "@web-eid.js/*": [
         "./lib/web-eid.js/src/*"
       ]
-    },
+    }
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/__tests__/*"]

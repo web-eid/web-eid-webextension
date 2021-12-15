@@ -62,7 +62,9 @@ async function onAction(message: ExtensionRequest, sender: MessageSender): Promi
       );
 
     case Action.STATUS:
-      return await status();
+      return await status(
+        message.libraryVersion,
+      );
   }
 }
 
