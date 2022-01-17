@@ -65,7 +65,10 @@ export default [
       libraryAlias,
       resolve({ rootDir: "./dist" }),
       cleanup({ comments: ["jsdoc"] }),
-      injectProcessEnv(),
+      injectProcessEnv({
+        DEBUG:                                 process.env.DEBUG,
+        TOKEN_SIGNING_BACKWARDS_COMPATIBILITY: process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY,
+      }),
       license({
         banner: {
           content: {
