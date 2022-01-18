@@ -32,6 +32,10 @@
 export default class ByteArray {
   data: number[];
 
+  get length(): number {
+    return this.data.length;
+  }
+
   constructor(byteArray?: number[]) {
     this.data = byteArray || [];
   }

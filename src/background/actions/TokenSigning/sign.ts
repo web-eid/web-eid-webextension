@@ -32,11 +32,33 @@ import {
 import ByteArray from "../../../shared/ByteArray";
 import NativeAppService from "../../services/NativeAppService";
 import config from "../../../config";
-import digestCommands from "./digestCommands";
 import errorToResponse from "./errorToResponse";
 import threeLetterLanguageCodes from "./threeLetterLanguageCodes";
 import { throwAfterTimeout } from "../../../shared/utils/timing";
 import tokenSigningResponse from "../../../shared/tokenSigningResponse";
+
+
+const digestCommandToHashFunction = {
+  "sha224":   "SHA-224",
+  "sha256":   "SHA-256",
+  "sha384":   "SHA-384",
+  "sha512":   "SHA-512",
+  "sha3-224": "SHA3-224",
+  "sha3-256": "SHA3-256",
+  "sha3-384": "SHA3-384",
+  "sha3-512": "SHA3-512",
+} as Record<string, string>;
+
+const hashFunctionToLength = {
+  "SHA-224":  28,
+  "SHA-256":  32,
+  "SHA-384":  48,
+  "SHA-512":  64,
+  "SHA3-224": 28,
+  "SHA3-256": 32,
+  "SHA3-384": 48,
+  "SHA3-512": 64,
+} as Record<string, number>;
 
 export default async function sign(
   nonce: string,
@@ -53,18 +75,54 @@ export default async function sign(
   const nativeAppService = new NativeAppService();
 
   try {
+    const warnings: Array<string> = [];
     const nativeAppStatus = await nativeAppService.connect();
 
     config.DEBUG && console.log("Sign: connected to native", nativeAppStatus);
+
+    let hashFunction = (
+      Object.keys(digestCommandToHashFunction).includes(algorithm)
+        ? digestCommandToHashFunction[algorithm]
+        : algorithm
+    );
+
+    const expectedHashByteLength = (
+      Object.keys(hashFunctionToLength).includes(hashFunction)
+        ? hashFunctionToLength[hashFunction]
+        : undefined
+    );
+
+    const hashByteArray = new ByteArray().fromHex(hash);
+
+    if (hashByteArray.length !== expectedHashByteLength) {
+      warnings.push(
+        `${algorithm} hash must be ${expectedHashByteLength} bytes long.\n` +
+        `The provided hash was ${hashByteArray.length} bytes long.\n` +
+        "See further details at https://github.com/web-eid/web-eid-webextension#hwcrypto-compatibility"
+      );
+
+      const autodetectedHashFunction = Object.keys(hashFunctionToLength).find((hashFunctionName) => (
+        hashFunctionToLength[hashFunctionName] == hashByteArray.length)
+      );
+
+      if (autodetectedHashFunction) {
+        warnings.push(
+          `Changed the algorithm from ${hashFunction} to ${autodetectedHashFunction} in order to match the hash length`
+        );
+
+        hashFunction = autodetectedHashFunction;
+      }
+    }
 
     const message: NativeSignRequest = {
       command: "sign",
 
       arguments: {
-        hash:         new ByteArray().fromHex(hash).toBase64(),
-        hashFunction: Object.keys(digestCommands).includes(algorithm) ? digestCommands[algorithm] : algorithm,
-        origin:       (new URL(sourceUrl)).origin,
-        certificate:  new ByteArray().fromHex(certificate).toBase64(),
+        hashFunction,
+
+        hash:        hashByteArray.toBase64(),
+        origin:      (new URL(sourceUrl)).origin,
+        certificate: new ByteArray().fromHex(certificate).toBase64(),
 
         ...(lang ? { lang } : {}),
       },
@@ -80,6 +138,8 @@ export default async function sign(
     } else {
       return tokenSigningResponse<TokenSigningSignResponse>("ok", nonce, {
         signature: new ByteArray().fromBase64(response.signature).toHex(),
+
+        warnings,
       });
     }
   } catch (error) {
