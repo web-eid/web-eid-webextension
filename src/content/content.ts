@@ -108,7 +108,11 @@ window.addEventListener("message", async (event) => {
 
       window.postMessage(response, event.origin);
     } else {
-      window.postMessage(await send(event.data), event.origin);
+      const response = await send(event.data) as { warnings?: [], [key: string]: any } | void;
+
+      response?.warnings?.forEach((warning) => console.warn(warning));
+
+      window.postMessage(response, event.origin);
     }
   }
 });
