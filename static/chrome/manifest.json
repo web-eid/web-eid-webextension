@@ -13,7 +13,8 @@
       ],
       "matches": [
         "*://*/*"
-      ]
+      ],
+      "all_frames": true
     }
   ],
   "browser_action": {
