@@ -79,7 +79,7 @@ export default async function getSigningCertificate(
     console.error("GetSigningCertificate:", error);
 
     return {
-      action: Action.STATUS_FAILURE,
+      action: Action.GET_SIGNING_CERTIFICATE_FAILURE,
       error:  serializeError(error),
     };
   } finally {
