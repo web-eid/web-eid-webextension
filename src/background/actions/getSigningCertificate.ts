@@ -25,7 +25,6 @@ import { NativeGetSigningCertificateRequest } from "@web-eid.js/models/message/N
 import { NativeGetSigningCertificateResponse } from "@web-eid.js/models/message/NativeResponse";
 import UnknownError from "@web-eid.js/errors/UnknownError";
 import UserTimeoutError from "@web-eid.js/errors/UserTimeoutError";
-import { serializeError } from "@web-eid.js/utils/errorSerializer";
 
 import {
   ExtensionFailureResponse,
@@ -34,19 +33,23 @@ import {
 
 import { MessageSender } from "../../models/Browser/Runtime";
 import NativeAppService from "../services/NativeAppService";
+import actionErrorHandler from "../../shared/actionErrorHandler";
 import config from "../../config";
 import { getSenderUrl } from "../../shared/utils/sender";
 import { throwAfterTimeout } from "../../shared/utils/timing";
 
 export default async function getSigningCertificate(
   sender: MessageSender,
+  libraryVersion: string,
   userInteractionTimeout: number,
   lang?: string,
 ): Promise<ExtensionGetSigningCertificateResponse | ExtensionFailureResponse> {
-  const nativeAppService = new NativeAppService();
+  let nativeAppService: NativeAppService | undefined;
+  let nativeAppStatus: { version: string } | undefined;
 
   try {
-    const nativeAppStatus = await nativeAppService.connect();
+    nativeAppService = new NativeAppService();
+    nativeAppStatus = await nativeAppService.connect();
 
     config.DEBUG && console.log("getSigningCertificate: connected to native", nativeAppStatus);
 
@@ -78,11 +81,8 @@ export default async function getSigningCertificate(
   } catch (error: any) {
     console.error("GetSigningCertificate:", error);
 
-    return {
-      action: Action.GET_SIGNING_CERTIFICATE_FAILURE,
-      error:  serializeError(error),
-    };
+    return actionErrorHandler(Action.GET_SIGNING_CERTIFICATE_FAILURE, error, libraryVersion, nativeAppStatus?.version);
   } finally {
-    nativeAppService.close();
+    nativeAppService?.close();
   }
 }
