@@ -39,6 +39,7 @@ async function onAction(message: ExtensionRequest, sender: MessageSender): Promi
         message.challengeNonce,
 
         sender,
+        message.libraryVersion,
         message.options?.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.options?.lang
       );
@@ -46,6 +47,7 @@ async function onAction(message: ExtensionRequest, sender: MessageSender): Promi
     case Action.GET_SIGNING_CERTIFICATE:
       return await getSigningCertificate(
         sender,
+        message.libraryVersion,
         message.options?.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.options?.lang
       );
@@ -57,6 +59,7 @@ async function onAction(message: ExtensionRequest, sender: MessageSender): Promi
         message.hashFunction,
 
         sender,
+        message.libraryVersion,
         message.options?.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.options?.lang
       );

@@ -24,12 +24,12 @@ import Action from "@web-eid.js/models/Action";
 import { NativeAuthenticateRequest } from "@web-eid.js/models/message/NativeRequest";
 import { NativeAuthenticateResponse } from "@web-eid.js/models/message/NativeResponse";
 import UserTimeoutError from "@web-eid.js/errors/UserTimeoutError";
-import { serializeError } from "@web-eid.js/utils/errorSerializer";
 
 import { ExtensionAuthenticateResponse, ExtensionFailureResponse } from "@web-eid.js/models/message/ExtensionResponse";
 import { MessageSender } from "../../models/Browser/Runtime";
 import NativeAppService from "../services/NativeAppService";
 import UnknownError from "@web-eid.js/errors/UnknownError";
+import actionErrorHandler from "../../shared/actionErrorHandler";
 import config from "../../config";
 import { getSenderUrl } from "../../shared/utils/sender";
 import { throwAfterTimeout } from "../../shared/utils/timing";
@@ -37,15 +37,16 @@ import { throwAfterTimeout } from "../../shared/utils/timing";
 export default async function authenticate(
   challengeNonce: string,
   sender: MessageSender,
+  libraryVersion: string,
   userInteractionTimeout: number,
   lang?: string,
 ): Promise<ExtensionAuthenticateResponse | ExtensionFailureResponse> {
   let nativeAppService: NativeAppService | undefined;
+  let nativeAppStatus: { version: string } | undefined;
 
   try {
     nativeAppService = new NativeAppService();
-
-    const nativeAppStatus = await nativeAppService.connect();
+    nativeAppStatus  = await nativeAppService.connect();
 
     config.DEBUG && console.log("Authenticate: connected to native", nativeAppStatus);
 
@@ -85,10 +86,7 @@ export default async function authenticate(
   } catch (error) {
     console.error("Authenticate:", error);
 
-    return {
-      action: Action.AUTHENTICATE_FAILURE,
-      error:  serializeError(error),
-    };
+    return actionErrorHandler(Action.AUTHENTICATE_FAILURE, error, libraryVersion, nativeAppStatus?.version);
   } finally {
     nativeAppService?.close();
   }
