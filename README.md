@@ -16,7 +16,7 @@ APIs, like the smart card subsystem.
 
 2. Clone the project
     ```bash
-    git clone git@gitlab.com:web-eid/webextension/web-eid-webextension.git
+    git clone --recurse-submodules git@gitlab.com:web-eid/webextension/web-eid-webextension.git
     ```
 
 3. Install dependencies
