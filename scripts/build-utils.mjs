@@ -5,6 +5,8 @@ import fs from "fs-extra"
 import archiver from "archiver";
 import glob from 'glob';
 
+const isWindows = /^win/.test(process.platform);
+
 export const pkg = JSON.parse(fs.readFileSync("./package.json", 'utf8'));
 
 export function rem(...lines) {
@@ -35,6 +37,10 @@ export async function rm(globPattern) {
 
 export function exec(command, args = []) {
   console.log(`EXEC ${command}${args.length ? ' ' + args.join(" ") : ''}`);
+  
+  if (isWindows && command.toLowerCase() === "npx") {
+    command += ".cmd";
+  }
 
   return new Promise((resolve, reject) => {
     const child = spawn(command, args);
