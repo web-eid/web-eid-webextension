@@ -2,13 +2,15 @@
 
 ![European Regional Development Fund](https://github.com/open-eid/DigiDoc4-Client/blob/master/client/images/EL_Regionaalarengu_Fond.png)
 
-The Web eID extension for the Chrome, Edge, Firefox and Opera web browsers is
+The Web eID extension for the Chrome, Edge and Firefox web browsers is
 built using the WebExtensions API, a cross-browser system for developing
-extensions. The extension communicates with the Web eID native application
+extensions. The extension communicates with the [Web eID native application](https://github.com/web-eid/web-eid-app)
 using Native messaging. Native messaging enables an extension to exchange
 messages with a native application installed on the user's computer to enable
 the extension to access resources that are not accessible through WebExtension
 APIs, like the smart card subsystem.
+
+The Web eID extension for Safari is built as a [Safari web extension](https://developer.apple.com/documentation/safariservices/safari_web_extensions). The source code of the Safari extension is in the [_web-eid-app_ GitHub repository](https://github.com/web-eid/web-eid-app), in the `src/mac` subdirectory, as it uses native code written in Objective-C that links with _web-eid-app_ code. The JavaScript layer of the Web eID Safari extension comes from the current WebExtension repository though. See the Safari extension overview in the [_web-eid-app_ README](https://github.com/web-eid/web-eid-app#safari-extension) for more details.
 
 ## Setup (for developers/testers)
 
