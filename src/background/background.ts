@@ -108,3 +108,23 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   return true;
 });
+
+(async function () {
+  if (typeof browser.pkcs11 === "undefined")
+    return;
+  async function unload(modname: string) {
+    try {
+      const isInstalled = await browser.pkcs11.isModuleInstalled(modname);
+      if (!isInstalled) {
+        console.log("module is not installed: " + modname);
+        return;
+      }
+      await browser.pkcs11.uninstallModule(modname);
+      console.log("Unloaded module " + modname);
+    } catch (e) {
+      console.error("Unable to unload module: ", e);
+    }
+  }
+  unload("onepinopenscpkcs11");
+  unload("idemiaawppkcs11");
+})();
