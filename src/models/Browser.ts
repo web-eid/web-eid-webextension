@@ -20,7 +20,6 @@
  * SOFTWARE.
  */
 
-import PKCS11 from "./Browser/PKCS11";
 import Permissions from "./Browser/Permissions";
 import Runtime from "./Browser/Runtime";
 import Tabs from "./Browser/Tabs";
@@ -51,13 +50,6 @@ export default interface Browser {
    * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/permissions
    */
   permissions: Permissions;
-
-  /**
-   * Enables operations with PKCS #11 security modules.
-   *
-   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/pkcs11
-   */
-  pkcs11: PKCS11;
 
   /**
    * Interact with the browser's tab system.

@@ -25,7 +25,6 @@ import { ExtensionRequest } from "@web-eid.js/models/message/ExtensionRequest";
 import libraryConfig from "@web-eid.js/config";
 
 import { MessageSender } from "../models/Browser/Runtime";
-import Pkcs11Service from "./services/Pkcs11Service";
 import TokenSigningAction from "./actions/TokenSigning";
 import { TokenSigningMessage } from "../models/TokenSigning/TokenSigningMessage";
 import authenticate from "./actions/authenticate";
@@ -112,6 +111,3 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   return true;
 });
-
-Pkcs11Service.unload("onepinopenscpkcs11");
-Pkcs11Service.unload("idemiaawppkcs11");
