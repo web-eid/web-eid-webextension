@@ -32,7 +32,6 @@
   },
   "permissions": [
     "*://*/*",
-    "nativeMessaging",
-    "pkcs11"
+    "nativeMessaging"
   ]
 }
