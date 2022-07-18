@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Web eID",
   "version": "{{package.version}}",
   "description": "Use your electronic identification card for secure authentication and digital signing.",
@@ -17,16 +17,16 @@
       "all_frames": true
     }
   ],
-  "browser_action": {
+  "action": {
     "default_icon": "icons/web-eid-icon-128.png"
   },
   "background": {
-    "scripts": [
-      "background.js"
-    ]
+    "service_worker": "background.js"
   },
   "permissions": [
-    "*://*/*",
     "nativeMessaging"
+  ],
+  "host_permissions": [
+    "*://*/*"
   ]
 }
