@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
+  "default_locale": "en",
   "name": "Web eID",
-  "version": "{{package.version}}",
   "description": "Use your electronic identification card for secure authentication and digital signing.",
+  "version": "{{package.version}}",
   "icons": {
-    "128": "icons/web-eid-icon-128.png"
+    "128": "web-eid-icon-128.png"
   },
   "content_scripts": [
     {
@@ -17,14 +18,17 @@
       "all_frames": true
     }
   ],
-  "action": {
+  "browser_action": {
     "default_icon": "icons/web-eid-icon-128.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "scripts": [
+      "background.js"
+    ]
   },
   "permissions": [
-    "nativeMessaging"
+    "nativeMessaging",
+    "tabs"
   ],
   "host_permissions": [
     "*://*/*"
