@@ -54,7 +54,7 @@ The Web eID extension for Safari is built as a [Safari web extension](https://de
     ```
 
 5. Load in Firefox as a Temporary Extension
-    1. Open [about:debugging#/runtime/this-firefox](about:debugging#/runtime/this-firefox)
+    1. Open `about:debugging#/runtime/this-firefox`
     2. Click "Load temporary Add-on..." and open `/web-eid-webextension/dist/manifest.json`
 
 ### Configuration
