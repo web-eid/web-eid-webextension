@@ -94,6 +94,19 @@ export default interface Runtime {
   ) => Promise<object | void>;
 
   connectNative: (application: string) => Port;
+
+  /**
+   * Given a relative path from the manifest.json to a resource packaged with the extension,
+   * return a fully-qualified URL.
+   *
+   * This function does not check that the resource actually exists at that URL.
+   */
+  getURL: (path: string) => string;
+
+  /**
+   * Get the complete manifest.json file, deserialized from JSON to an object.
+   */
+  getManifest: () => any;
 }
 
 export interface Port {

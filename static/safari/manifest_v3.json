@@ -7,6 +7,10 @@
   "icons": {
     "128": "web-eid-icon-128.png"
   },
+  "web_accessible_resources": [{
+    "resources": ["token-signing-page-script.js"],
+    "matches": ["<all_urls>"]
+  }],
   "content_scripts": [
     {
       "js": [

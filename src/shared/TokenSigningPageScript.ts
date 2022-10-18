@@ -23,15 +23,15 @@
 import {
   TokenSigningCertResponse,
   TokenSigningResponse,
-} from "../../models/TokenSigning/TokenSigningResponse";
+} from "../models/TokenSigning/TokenSigningResponse";
 import {
   TokenSigningGetCertificateMessage,
   TokenSigningMessage,
   TokenSigningSignMessage,
   TokenSigningVersionMessage,
-} from "../../models/TokenSigning/TokenSigningMessage";
+} from "../models/TokenSigning/TokenSigningMessage";
 
-import TokenSigningPromise from "../../models/TokenSigning/TokenSigningPromise";
+import TokenSigningPromise from "../models/TokenSigning/TokenSigningPromise";
 
 declare global {
   interface Window {

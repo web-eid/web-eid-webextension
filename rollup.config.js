@@ -82,4 +82,33 @@ export default [
 
     context: "window",
   })),
+
+  {
+    input: "./dist/firefox/resources/token-signing-page-script.js",
+
+    output: [
+      {
+        file:      "dist/firefox/token-signing-page-script.js",
+        format:    "iife",
+        sourcemap: true,
+      },
+    ],
+
+    plugins: [
+      libraryAlias,
+      resolve({ rootDir: "./dist" }),
+      cleanup({ comments: ["jsdoc"] }),
+      license({
+        banner: {
+          content: {
+            // eslint-disable-next-line no-undef
+            file:     path.join(__dirname, "LICENSE"),
+            encoding: "utf-8",
+          },
+        },
+      }),
+    ],
+
+    context: "window",
+  },
 ];
