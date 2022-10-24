@@ -6,7 +6,6 @@
     "declaration": true,
     "declarationMap": true,
     "moduleResolution": "node",
-    "sourceMap": true,
     "strict": true,
     "outDir": "dist",
     "baseUrl": ".",
