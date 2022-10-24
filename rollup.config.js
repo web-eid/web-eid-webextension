@@ -23,7 +23,7 @@ export default [
       {
         file:      `dist/firefox/${name}.js`,
         format:    "iife",
-        sourcemap: true,
+        sourcemap: name === "background",
       },
     ],
 
@@ -57,7 +57,7 @@ export default [
       {
         file:      `dist/safari/${name}.js`,
         format:    "iife",
-        sourcemap: true,
+        sourcemap: name === "background",
       },
     ],
 
@@ -88,9 +88,8 @@ export default [
 
     output: [
       {
-        file:      "dist/firefox/token-signing-page-script.js",
-        format:    "iife",
-        sourcemap: true,
+        file:   "dist/firefox/token-signing-page-script.js",
+        format: "iife",
       },
     ],
 
