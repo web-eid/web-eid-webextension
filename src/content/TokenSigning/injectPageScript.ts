@@ -41,7 +41,7 @@ export default function injectPageScript(): void {
     s.dataset.name = "TokenSigning";
     s.dataset.by = "Web-eID extension";
 
-    if (browser.runtime.getManifest()["manifest_version"] !== 2) {
+    if (browser.runtime.getManifest()["manifest_version"] >= 3) {
       s.src = browser.runtime.getURL("token-signing-page-script.js");
     } else {
       s.innerHTML = "(" + pageScript + ")();";
