@@ -16,7 +16,7 @@ const targets = {
   async clean() {
     rem(
       "Cleaning the dist directory"
-    )
+    );
     await rm("./dist");
   },
 
@@ -48,12 +48,12 @@ const targets = {
 
     rem(
       "Preparing the Firefox dist directory"
-    )
+    );
     await cp("./dist/src", "./dist/firefox");
 
     rem(
       "Preparing the Safari dist directory"
-    )
+    );
     await cp("./dist/src", "./dist/safari");
     await cp("./dist/safari/background-safari", "./dist/safari/background");
     await rm("./dist/safari/background-safari");
@@ -82,6 +82,13 @@ const targets = {
     );
     await cp("./static/icons", "./dist/firefox/icons");
     await cp("./static/icons", "./dist/safari");
+
+    rem(
+      "Copying static pages"
+    );
+    await cp("./static/_locales", "./dist/firefox/_locales");
+    await cp("./static/views", "./dist/firefox/views");
+    await cp("./node_modules/bootstrap/dist/css/bootstrap.min.css", "./dist/firefox/views/bootstrap.min.css");
 
     rem(
       "Preparing the Chrome dist directory for:",

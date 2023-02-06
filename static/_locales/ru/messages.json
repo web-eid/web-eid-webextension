@@ -1,0 +1,28 @@
+{
+  "title": {
+    "message": "Web eID условия защиты данных",
+    "description": "Title"
+  },
+  "content": {
+    "message": "Web eID передает электронной услуге следующие персональные идентификационные данные:<ul><li>сертификат пользователя для аутентификации или подписи;</li><li>адрес веб-сайта (URL) для аутентификации.</li></ul>Передача персональных данных необходима для работы аутентификации и цифровой подписи. Передаваемые данные не сохраняются. Если вы не согласны на передачу данных, рекомендуем удалить расширение Web eID.<br />Более подробную информацию о передаче персональных данных и их использовании можно найти из <a href=\"$URL$\" target=\"_blank\">условий защиты данных</a>.",
+    "description": "Content",
+    "placeholders": {
+      "url" : {
+        "content" : "$1",
+        "example" : "https://addons.mozilla.org/en-US/firefox/addon/web-eid-webextension/privacy/"
+      }
+    }
+  },
+  "error": {
+    "message": "Чтобы удалить расширение Web eID, удалите программное обеспечение ID. Подробные инструкции можно найти на веб-сайте <a href=\"https://id.ee/ru/\" target=\"_blank\">id.ee</a>.",
+    "description": "Uninstall error"
+  },
+  "agree": {
+    "message": "Соглашаюсь с условиями",
+    "description": "Agree button."
+  },
+  "uninstall": {
+    "message": "Удалить Web eID",
+    "description": "Uninstall button."
+  }
+}

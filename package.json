@@ -25,6 +25,7 @@
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "archiver": "^5.3.0",
+    "bootstrap": "^5.3.0-alpha1",
     "eslint": "^8.2.0",
     "fs-extra": "^10.0.0",
     "glob": "^7.2.0",
