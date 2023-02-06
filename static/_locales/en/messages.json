@@ -1,0 +1,28 @@
+{
+  "title": {
+    "message": "Web eID Data Protection Terms",
+    "description": "Title"
+  },
+  "content": {
+    "message": "Web eID transmits the following data that personally identifies you to the e-service:<ul><li>the user`s certificate for authentication or signing;</li><li>URL of the website origin for authentication.</li></ul>The transfer of personal data is necessary for the functioning of authentication and digital signing. Transmitted data is not stored. If you do not agree to the transfer of data then we recommend you to remove the Web eID extension.<br />Full details about the personal data we transmit and what we do with it are provided in our <a href=\"$URL$\" target=\"_blank\">Data Protection Terms</a>.",
+    "description": "Content",
+    "placeholders": {
+      "url" : {
+        "content" : "$1",
+        "example" : "https://addons.mozilla.org/en-US/firefox/addon/web-eid-webextension/privacy/"
+      }
+    }
+  },
+  "error": {
+    "message": "To remove the Web eID extension, uninstall ID-software. You can find instructions from <a href=\"https://id.ee/en/\" target=\"_blank\">id.ee</a> website.",
+    "description": "Uninstall error"
+  },
+  "agree": {
+    "message": "Accept the terms",
+    "description": "Agree button."
+  },
+  "uninstall": {
+    "message": "Remove Web eID",
+    "description": "Uninstall button."
+  }
+}

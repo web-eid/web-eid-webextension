@@ -1,0 +1,28 @@
+{
+  "title": {
+    "message": "Web eID andmekaitsetingimused",
+    "description": "Title"
+  },
+  "content": {
+    "message": "Web eID edastab e-teenusele järgmised teie isikut identifitseerivad andmed:<ul><li>kasutaja sertifikaat autentimiseks või allkirjastamiseks;</li><li>veebisaidi aadress (URL) autentimiseks.</li></ul>Isikuandmete edastamine on vajalik autentimise ja digiallkirjastamise toimimiseks. Edastatavaid andmeid ei sälilitata. Kui te ei nõustu andmete edastamisega, siis soovitame teil Web eID laienduse eemaldada.<br />Täpsem info isikuandmete edastamise ja nende kasutamise kohta on leitav <a href=\"$URL$\" target=\"_blank\">andmekaitsetingimustest</a>.",
+    "description": "Content",
+    "placeholders": {
+      "url" : {
+        "content" : "$1",
+        "example" : "https://addons.mozilla.org/en-US/firefox/addon/web-eid-webextension/privacy/"
+      }
+    }
+  },
+  "error": {
+    "message": "Web eID laienduse eemaldamiseks kustutage ID-tarkvara. Täpsemad juhised on leitavad <a href=\"https://id.ee\" target=\"_blank\">id.ee</a> veebilehelt.",
+    "description": "Uninstall error"
+  },
+  "agree": {
+    "message": "Nõustun tingimustega",
+    "description": "Agree button."
+  },
+  "uninstall": {
+    "message": "Eemalda Web eID",
+    "description": "Uninstall button."
+  }
+}

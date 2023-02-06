@@ -32,6 +32,11 @@ import getSigningCertificate from "./actions/getSigningCertificate";
 import sign from "./actions/sign";
 import status from "./actions/status";
 
+async function showConsent() {
+  const url = browser.runtime.getURL("views/installed.html");
+  return await browser.tabs.create({ url, active: true });
+}
+
 async function onAction(message: ExtensionRequest, sender: MessageSender): Promise<void | object> {
   switch (message.action) {
     case Action.AUTHENTICATE:
@@ -102,6 +107,13 @@ async function onTokenSigningAction(message: TokenSigningMessage, sender: Messag
     }
   }
 }
+
+browser.runtime.onInstalled.addListener(async ({ reason, temporary }) => {
+  if (temporary) return;
+  if (reason == "install") {
+    await showConsent();
+  }
+});
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if ((message as ExtensionRequest).action) {

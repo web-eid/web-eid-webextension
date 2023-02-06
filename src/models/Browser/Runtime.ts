@@ -22,6 +22,19 @@
 
 export default interface Runtime {
   /**
+   * Fired when the extension is first installed, when the extension is updated to a new version, and when the browser is
+   * updated to a new version.
+   *
+   * Note that runtime.onInstalled is not the same as management.onInstalled. The runtime.onInstalled event is fired only
+   * for your extension. The browser.management.onInstalled event is fired for any extensions.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onInstalled
+   */
+  onInstalled: {
+    addListener: (callback: OnInstalledCallback) => void;
+  };
+
+  /**
    * A string representing the extension ID.
    *
    * If the extension specifies an ID in its browser_specific_settings manifest.json key, runtime.id contains that value.
@@ -126,6 +139,16 @@ export interface Port {
   sender?: any;
 }
 
+export type OnInstallReason = "install" | "update" | "chrome_update" | "shared_module_update";
+
+export interface OnInstalledDetails {
+  id?: string;
+  previousVersion?: string;
+  reason: OnInstallReason;
+  temporary: boolean;
+}
+
+export type OnInstalledCallback = (details: OnInstalledDetails, sender: MessageSender, sendResponse?: any) => Promise<any> | void | boolean;
 export type OnMessageCallback = (message: any, sender: MessageSender, sendResponse?: any) => Promise<any> | void | boolean;
 
 export interface MessageSender {
