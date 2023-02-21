@@ -54,7 +54,7 @@ window.addEventListener("message", async (event) => {
     // When there are deprecation warnings, these messages would be sent by the content script and handled by the Web-eID library.
     if (event.data.action === Action.WARNING) return;
 
-    config.DEBUG && console.log("Web-eID event: ", event);
+    config.DEBUG && console.log("Web-eID event: ", JSON.stringify(event));
 
     if (!window.isSecureContext) {
       const response = {
@@ -98,7 +98,7 @@ window.addEventListener("message", async (event) => {
       }
     }
   } else if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY && isTokenSigningEvent(event)) {
-    config.DEBUG && console.log("TokenSigning event:", event);
+    config.DEBUG && console.log("TokenSigning event:", JSON.stringify(event));
 
     if (!window.isSecureContext) {
       console.error(new ContextInsecureError());
