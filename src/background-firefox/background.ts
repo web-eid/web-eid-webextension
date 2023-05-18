@@ -25,12 +25,17 @@ import { ExtensionRequest } from "@web-eid.js/models/message/ExtensionRequest";
 import libraryConfig from "@web-eid.js/config";
 
 import { MessageSender } from "../models/Browser/Runtime";
-import TokenSigningAction from "./actions/TokenSigning";
+import TokenSigningAction from "../background/actions/TokenSigning";
 import { TokenSigningMessage } from "../models/TokenSigning/TokenSigningMessage";
-import authenticate from "./actions/authenticate";
-import getSigningCertificate from "./actions/getSigningCertificate";
-import sign from "./actions/sign";
-import status from "./actions/status";
+import authenticate from "../background/actions/authenticate";
+import getSigningCertificate from "../background/actions/getSigningCertificate";
+import sign from "../background/actions/sign";
+import status from "../background/actions/status";
+
+async function showConsent() {
+  const url = browser.runtime.getURL("views/installed.html");
+  return await browser.tabs.create({ url, active: true });
+}
 
 async function onAction(message: ExtensionRequest, sender: MessageSender): Promise<void | object> {
   switch (message.action) {
@@ -102,6 +107,13 @@ async function onTokenSigningAction(message: TokenSigningMessage, sender: Messag
     }
   }
 }
+
+browser.runtime.onInstalled.addListener(async ({ reason, temporary }) => {
+  if (temporary) return;
+  if (reason == "install") {
+    await showConsent();
+  }
+});
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if ((message as ExtensionRequest).action) {

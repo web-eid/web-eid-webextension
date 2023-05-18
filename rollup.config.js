@@ -17,6 +17,40 @@ const libraryAlias = alias({
 
 export default [
   ...["content", "background"].map((name) => ({
+    input: `./dist/chrome/${name}/${name}.js`,
+
+    output: [
+      {
+        file:      `dist/chrome/${name}.js`,
+        format:    "iife",
+        sourcemap: name === "background",
+      },
+    ],
+
+    plugins: [
+      libraryAlias,
+      resolve({ rootDir: "./dist" }),
+      polyfill(["webextension-polyfill"]),
+      cleanup({ comments: ["jsdoc"] }), // Keep jsdoc comments
+      injectProcessEnv({
+        DEBUG:                                 process.env.DEBUG,
+        TOKEN_SIGNING_BACKWARDS_COMPATIBILITY: process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY,
+      }),
+      license({
+        banner: {
+          content: {
+            // eslint-disable-next-line no-undef
+            file:     path.join(__dirname, "LICENSE"),
+            encoding: "utf-8",
+          },
+        },
+      }),
+    ],
+
+    context: "window",
+  })),
+
+  ...["content", "background"].map((name) => ({
     input: `./dist/firefox/${name}/${name}.js`,
 
     output: [

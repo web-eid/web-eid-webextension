@@ -47,9 +47,23 @@ const targets = {
     await replace("./dist/src/config.js", "{{package.version}}", pkg.version);
 
     rem(
+      "Preparing the Chrome dist directory for:",
+      "- Google Chrome",
+      "- Chromium",
+      "- Microsoft Edge",
+      "- Opera",
+    );
+    await cp("./dist/src", "./dist/chrome");
+    await rm("./dist/chrome/background-safari");
+    await rm("./dist/chrome/background-firefox");
+
+    rem(
       "Preparing the Firefox dist directory"
     );
     await cp("./dist/src", "./dist/firefox");
+    await cp("./dist/firefox/background-firefox", "./dist/firefox/background");
+    await rm("./dist/firefox/background-safari");
+    await rm("./dist/firefox/background-firefox");
 
     rem(
       "Preparing the Safari dist directory"
@@ -57,6 +71,7 @@ const targets = {
     await cp("./dist/src", "./dist/safari");
     await cp("./dist/safari/background-safari", "./dist/safari/background");
     await rm("./dist/safari/background-safari");
+    await rm("./dist/safari/background-firefox");
 
     await this.bundle();
 
@@ -66,6 +81,8 @@ const targets = {
     );
     await rm("./dist/lib");
     await rm("./dist/src");
+    await rm("./dist/chrome/*/");
+    await rm("./dist/chrome/config.*");
     await rm("./dist/firefox/*/");
     await rm("./dist/firefox/config.*");
     await rm("./dist/safari/*/");
@@ -75,29 +92,22 @@ const targets = {
       "Setting up SOURCE_DATE_EPOCH for reproducible builds"
     );
     sourceDateEpoch = await getSourceDateEpoch();
+    await write("./dist/chrome/SOURCE_DATE_EPOCH", sourceDateEpoch.epoch);
     await write("./dist/firefox/SOURCE_DATE_EPOCH", sourceDateEpoch.epoch);
 
     rem(
       "Copying icons"
     );
+    await cp("./static/icons", "./dist/chrome/icons");
     await cp("./static/icons", "./dist/firefox/icons");
     await cp("./static/icons", "./dist/safari");
 
     rem(
-      "Copying static pages"
+      "Copying Firefox static pages"
     );
     await cp("./static/_locales", "./dist/firefox/_locales");
     await cp("./static/views", "./dist/firefox/views");
     await cp("./node_modules/bootstrap/dist/css/bootstrap.min.css", "./dist/firefox/views/bootstrap.min.css");
-
-    rem(
-      "Preparing the Chrome dist directory for:",
-      "- Google Chrome",
-      "- Chromium",
-      "- Microsoft Edge",
-      "- Opera",
-    );
-    await cp("./dist/firefox", "./dist/chrome");
 
     rem(
       "Setting up the Firefox manifest"
