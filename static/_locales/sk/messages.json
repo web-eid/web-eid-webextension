@@ -1,0 +1,28 @@
+{
+  "title": {
+    "message": "Podmienky ochrany údajov Web eID",
+    "description": "Názov"
+  },
+  "content": {
+    "message": "Web eID prenáša do elektronickej služby nasledujúce údaje, ktoré vás osobne identifikujú:<ul><li>užívateľský certifikát na overenie alebo podpisovanie;</li><li>URL pôvodnej webovej stránky pre autentifikáciu.</li> </ul>Prenos osobných údajov je nevyhnutný pre fungovanie autentizácie a digitálneho podpisovania. Prenášané dáta sa neukladajú. Ak s odovzdaním dát nesúhlasíte, odporúčame odstrániť rozšírenie Web eID.<br />Úplné podrobnosti o osobných údajoch, ktoré prenášame, ao tom, čo s nimi robíme, sú uvedené v našich <a href=\"$URL$\" target=\"_blank\">podmienkach ochrany údajov</a>.",
+    "description": "Content",
+    "placeholders": {
+      "url" : {
+        "content" : "$1",
+        "example" : "https://addons.mozilla.org/en-US/firefox/addon/web-eid-webextension/privacy/"
+      }
+    }
+  },
+  "error": {
+    "message": "Ak chcete odstrániť rozšírenie Web eID, odinštalujte ID-software. Pokyny nájdete na <a href=\"https://id.ee/en/\" target=\"_blank\">id. ee </a> webové stránky.",
+    "description": "Chyba pri odinštalovaní"
+  },
+  "agree": {
+    "message": "Prijať podmienky",
+    "description": "Tlačidlo Súhlasím."
+  },
+  "uninstall": {
+    "message": "Odstrániť Web eID",
+    "description": "Tlačidlo odinštalovať."
+  }
+}
