@@ -34,4 +34,6 @@ export default {
   "lit": "lt",
   "lat": "lv",
   "tur": "tr",
+  "ces": "cs",
+  "slk": "sk",
 } as Record<string, string>;
