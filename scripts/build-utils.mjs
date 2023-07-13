@@ -37,7 +37,7 @@ export async function rm(globPattern) {
 
 export function exec(command, args = []) {
   console.log(`EXEC ${command}${args.length ? ' ' + args.join(" ") : ''}`);
-  
+
   if (isWindows && command.toLowerCase() === "npx") {
     command += ".cmd";
   }
@@ -94,6 +94,24 @@ export function replace(filename, from, to) {
       const result = data.replace(from, to);
 
       fs.writeFileSync(filename, result);
+
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function appendToFile(targetFileName, sourceFileName) {
+  console.log(`APPEND ${sourceFileName} to ${targetFileName}`);
+
+  return new Promise((resolve, reject) => {
+    try {
+      const targetFileData = fs.readFileSync(path.resolve(targetFileName), 'utf8');
+      const sourceFileData = fs.readFileSync(path.resolve(sourceFileName), 'utf8');
+      const result = targetFileData + sourceFileData;
+
+      fs.writeFileSync(targetFileName, result);
 
       resolve();
     } catch (error) {

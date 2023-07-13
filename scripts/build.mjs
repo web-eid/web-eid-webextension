@@ -4,6 +4,7 @@ import {
   exec,
   zip,
   replace,
+  appendToFile,
   rem,
   pkg,
   write,
@@ -29,27 +30,31 @@ const targets = {
 
   async compile() {
     rem(
-      "Compiling TypeScript files to ES6 modules"
+      "Compiling TypeScript files to ES6 modules in dist/src"
     );
     await exec("npx", ["tsc"]);
   },
 
   async bundle() {
     rem(
-      "Creating ES6 module bundles with Rollup"
+      `Setting version to ${pkg.version}`
     );
-    await exec("npx", ["rollup", "-c"]);
-  },
-
-  async build() {
-    await this.compile();
-
     await replace("./dist/src/config.js", "{{package.version}}", pkg.version);
+
+    rem(
+      "Preparing the Chrome dist directory for:",
+      "- Google Chrome",
+      "- Chromium",
+      "- Microsoft Edge",
+      "- Opera",
+    );
+    await cp("./dist/src", "./dist/chrome");
 
     rem(
       "Preparing the Firefox dist directory"
     );
     await cp("./dist/src", "./dist/firefox");
+    await appendToFile("./dist/firefox/background/background.js", "./dist/firefox/background-firefox/consent.js");
 
     rem(
       "Preparing the Safari dist directory"
@@ -57,6 +62,15 @@ const targets = {
     await cp("./dist/src", "./dist/safari");
     await cp("./dist/safari/background-safari", "./dist/safari/background");
     await rm("./dist/safari/background-safari");
+
+    rem(
+      "Creating ES6 module bundles with Rollup in dist/{chrome,firefox,safari}"
+    );
+    await exec("npx", ["rollup", "-c"]);
+  },
+
+  async build() {
+    await this.compile();
 
     await this.bundle();
 
@@ -66,6 +80,8 @@ const targets = {
     );
     await rm("./dist/lib");
     await rm("./dist/src");
+    await rm("./dist/chrome/*/");
+    await rm("./dist/chrome/config.*");
     await rm("./dist/firefox/*/");
     await rm("./dist/firefox/config.*");
     await rm("./dist/safari/*/");
@@ -75,29 +91,22 @@ const targets = {
       "Setting up SOURCE_DATE_EPOCH for reproducible builds"
     );
     sourceDateEpoch = await getSourceDateEpoch();
+    await write("./dist/chrome/SOURCE_DATE_EPOCH", sourceDateEpoch.epoch);
     await write("./dist/firefox/SOURCE_DATE_EPOCH", sourceDateEpoch.epoch);
 
     rem(
       "Copying icons"
     );
+    await cp("./static/icons", "./dist/chrome/icons");
     await cp("./static/icons", "./dist/firefox/icons");
     await cp("./static/icons", "./dist/safari");
 
     rem(
-      "Copying static pages"
+      "Copying static consent pages to Firefox dist directory"
     );
     await cp("./static/_locales", "./dist/firefox/_locales");
     await cp("./static/views", "./dist/firefox/views");
     await cp("./node_modules/bootstrap/dist/css/bootstrap.min.css", "./dist/firefox/views/bootstrap.min.css");
-
-    rem(
-      "Preparing the Chrome dist directory for:",
-      "- Google Chrome",
-      "- Chromium",
-      "- Microsoft Edge",
-      "- Opera",
-    );
-    await cp("./dist/firefox", "./dist/chrome");
 
     rem(
       "Setting up the Firefox manifest"
