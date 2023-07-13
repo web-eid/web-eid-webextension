@@ -17,7 +17,7 @@ The Web eID extension for Safari is built as a [Safari web extension](https://de
 1. Install the latest LTS version of Node.js - [https://nodejs.org](https://nodejs.org)
 
 2. Clone the project
-    ```bash/
+    ```bash
     git clone --recurse-submodules https://github.com/web-eid/web-eid-webextension.git
     ```
 
