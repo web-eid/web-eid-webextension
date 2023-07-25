@@ -8,14 +8,13 @@ import resolve from "@rollup/plugin-node-resolve";
 
 const projectRootDir = path.resolve(__dirname);
 
-const libraryAlias = alias({
-  entries: [
-    { find: "@web-eid.js", replacement: path.resolve(projectRootDir, "dist/lib/web-eid.js/src") },
-  ],
-});
-
 const pluginsConf = [
-  libraryAlias,
+  alias({
+    entries: [{
+      find: "@web-eid.js",
+      replacement: path.resolve(projectRootDir, "dist/lib/web-eid.js/src")
+    }],
+  }),
   resolve({ rootDir: "./dist" }),
   cleanup({ comments: ["jsdoc"] }), // Keep jsdoc comments
   injectProcessEnv({
@@ -25,79 +24,42 @@ const pluginsConf = [
   license({
     banner: {
       content: {
-        // eslint-disable-next-line no-undef
-        file: path.join(__dirname, "LICENSE"),
+        file: path.join(projectRootDir, "LICENSE"),
         encoding: "utf-8",
       },
     },
   }),
 ];
 
-export default [
-  ...["content", "background"].map((name) => ({
-    input: `./dist/chrome/${name}/${name}.js`,
+// List of browsers to build for.
+const browsers = ["chrome", "firefox", "safari"];
 
+// Use flatMap() to create a configuration for each browser and each of the "content" and "background" scripts.
+const browserConfigs = browsers.flatMap((browser) =>
+  ["content", "background"].map((name) => ({
+    input: `./dist/${browser}/${name}/${name}.js`,
     output: [
       {
-        file:      `dist/chrome/${name}.js`,
-        format:    "iife",
-        sourcemap: name === "background",
-      },
-    ],
-
-    plugins: pluginsConf,
-
-    context: "window",
-  })),
-
-  ...["content", "background"].map((name) => ({
-    input: `./dist/firefox/${name}/${name}.js`,
-
-    output: [
-      {
-        file:      `dist/firefox/${name}.js`,
-        format:    "iife",
-        sourcemap: name === "background",
-      },
-    ],
-
-    plugins: pluginsConf,
-
-    context: "window",
-  })),
-
-  ...["content", "background"].map((name) => ({
-    input: `./dist/safari/${name}/${name}.js`,
-
-    output: [
-      {
-        file:      `dist/safari/${name}.js`,
-        format:    "iife",
-        sourcemap: name === "background",
-      },
-    ],
-
-    plugins: pluginsConf,
-
-    context: "window",
-  })),
-
-  {
-    input: "./dist/firefox/resources/token-signing-page-script.js",
-
-    output: [
-      {
-        file:   "dist/chrome/token-signing-page-script.js",
+        file: `dist/${browser}/${name}.js`,
         format: "iife",
-      },
-      {
-        file:   "dist/firefox/token-signing-page-script.js",
-        format: "iife",
+        sourcemap: name === "background",
       },
     ],
-
     plugins: pluginsConf,
-
     context: "window",
-  },
-];
+  }))
+);
+
+// Define the configuration for the TokenSigning compatibility page script for Chrome and Firefox.
+const tokenSigningPageConfig = {
+  input: "./dist/firefox/resources/token-signing-page-script.js",
+  output: ["chrome", "firefox"].map((browser) => ({
+    file: `dist/${browser}/token-signing-page-script.js`,
+    format: "iife",
+  })),
+  plugins: pluginsConf,
+  context: "window",
+};
+
+// Export all configurations as an array.
+export default [...browserConfigs, tokenSigningPageConfig];
