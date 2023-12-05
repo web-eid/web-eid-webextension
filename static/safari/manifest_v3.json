@@ -31,8 +31,7 @@
     ]
   },
   "permissions": [
-    "nativeMessaging",
-    "tabs"
+    "nativeMessaging"
   ],
   "host_permissions": [
     "*://*/*"
