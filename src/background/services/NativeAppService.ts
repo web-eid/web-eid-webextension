@@ -95,6 +95,9 @@ export default class NativeAppService {
     // Accessing lastError when it exists stops chrome from throwing it unnecessarily.
     chrome?.runtime?.lastError;
 
+    // Defer active connection cleanup for Edge
+    await new Promise((resolve) => setTimeout(resolve));
+
     this.activeConnection?.resolve();
     this.state = NativeAppState.DISCONNECTED;
 
