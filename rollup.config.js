@@ -46,7 +46,7 @@ const browserConfigs = browsers.flatMap((browser) =>
         sourcemap: name === "background",
       },
     ],
-    plugins: [...pluginsConf, polyfill(["webextension-polyfill"])],
+    plugins: browser === "chrome" ? [...pluginsConf, polyfill(["webextension-polyfill"])] : pluginsConf,
     context: "window",
   }))
 );
