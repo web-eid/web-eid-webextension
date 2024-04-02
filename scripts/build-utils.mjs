@@ -43,10 +43,10 @@ export function exec(command, args = []) {
   }
 
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args);
-
-    child.stdout.pipe(process.stdout);
-    child.stderr.pipe(process.stderr);
+    const child = spawn(command, args, {
+      cwd: '.',
+      stdio: 'inherit'
+    });
 
     child.on("close", (code) => {
       if (code == 0) {
