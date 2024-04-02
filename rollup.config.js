@@ -9,7 +9,15 @@ import resolve from "@rollup/plugin-node-resolve";
 
 const projectRootDir = path.resolve(__dirname);
 
-const pluginsConf = [
+// List of browsers to build for.
+const browsers = ["chrome", "firefox", "safari"];
+
+const processEnvConf = {
+  DEBUG:                                 process.env.DEBUG,
+  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY: process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY,
+}
+
+const pluginsConf = (environment) => [
   alias({
     entries: [{
       find:        "@web-eid.js",
@@ -18,10 +26,6 @@ const pluginsConf = [
   }),
   resolve({ rootDir: "./dist" }),
   cleanup({ comments: ["jsdoc"] }), // Keep jsdoc comments
-  injectProcessEnv({
-    DEBUG:                                 process.env.DEBUG,
-    TOKEN_SIGNING_BACKWARDS_COMPATIBILITY: process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY,
-  }),
   license({
     banner: {
       content: {
@@ -30,10 +34,10 @@ const pluginsConf = [
       },
     },
   }),
-];
 
-// List of browsers to build for.
-const browsers = ["chrome", "firefox", "safari"];
+  ...(environment === "chrome"      ? [ polyfill(["webextension-polyfill"]) ] : []),
+  ...(environment !== "page-script" ? [ injectProcessEnv(processEnvConf)    ] : []),
+];
 
 // Use flatMap() to create a configuration for each browser and each of the "content" and "background" scripts.
 const browserConfigs = browsers.flatMap((browser) =>
@@ -46,7 +50,7 @@ const browserConfigs = browsers.flatMap((browser) =>
         sourcemap: name === "background",
       },
     ],
-    plugins: browser === "chrome" ? [...pluginsConf, polyfill(["webextension-polyfill"])] : pluginsConf,
+    plugins: pluginsConf(browser),
     context: "window",
   }))
 );
@@ -58,7 +62,7 @@ const tokenSigningPageConfig = {
     file:   `dist/${browser}/token-signing-page-script.js`,
     format: "iife",
   })),
-  plugins: pluginsConf,
+  plugins: pluginsConf("page-script"),
   context: "window",
 };
 
