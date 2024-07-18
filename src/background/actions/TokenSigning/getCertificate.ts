@@ -34,7 +34,6 @@ import NativeAppService from "../../services/NativeAppService";
 import config from "../../../config";
 import errorToResponse from "./errorToResponse";
 import threeLetterLanguageCodes from "./threeLetterLanguageCodes";
-import { throwAfterTimeout } from "../../../shared/utils/timing";
 import tokenSigningResponse from "../../../shared/tokenSigningResponse";
 
 export default async function getCertificate(
@@ -74,10 +73,11 @@ export default async function getCertificate(
       },
     };
 
-    const response = await Promise.race([
-      nativeAppService.send<NativeGetSigningCertificateResponse>(message),
-      throwAfterTimeout(config.TOKEN_SIGNING_USER_INTERACTION_TIMEOUT, new UserTimeoutError()),
-    ]);
+    const response = await nativeAppService.send<NativeGetSigningCertificateResponse>(
+      message,
+      config.TOKEN_SIGNING_USER_INTERACTION_TIMEOUT,
+      new UserTimeoutError(),
+    );
 
     if (!response?.certificate) {
       return tokenSigningResponse<TokenSigningErrorResponse>("no_certificates", nonce);

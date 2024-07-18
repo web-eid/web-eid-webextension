@@ -52,7 +52,14 @@ export default class NativeAppService {
 
     try {
       const message = await new Promise<{ version: string }>((resolve, reject) => {
-        setTimeout(reject, libraryConfig.NATIVE_APP_HANDSHAKE_TIMEOUT);
+        setTimeout(
+          () => {
+            reject(new NativeUnavailableError(
+              `native application handshake timeout, ${libraryConfig.NATIVE_APP_HANDSHAKE_TIMEOUT}ms`
+            ));
+          },
+          libraryConfig.NATIVE_APP_HANDSHAKE_TIMEOUT,
+        );
 
         browser.runtime.sendNativeMessage(
           "application.id",
@@ -91,7 +98,7 @@ export default class NativeAppService {
     this.pending = null;
   }
 
-  async send<T>(message: NativeRequest): Promise<T> {
+  async send<T>(message: NativeRequest, timeout: number, throwAfterTimeout: Error): Promise<T> {
     if (message.command == "quit") return {} as T;
 
     switch (this.state) {
@@ -100,6 +107,8 @@ export default class NativeAppService {
 
         const sendPromise = new Promise<T>((resolve, reject) => {
           this.pending = { resolve, reject };
+
+          setTimeout(() => { reject(throwAfterTimeout); }, timeout );
 
           const onResponse = (message: any): void => {
             this.pending = null;
