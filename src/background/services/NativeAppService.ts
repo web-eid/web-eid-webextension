@@ -21,20 +21,13 @@
  */
 
 import NativeUnavailableError from "@web-eid.js/errors/NativeUnavailableError";
-import UnknownError from "@web-eid.js/errors/UnknownError";
 import { deserializeError } from "@web-eid.js/utils/errorSerializer";
 import libraryConfig from "@web-eid.js/config";
 
-import { NativeFailureResponse } from "@web-eid.js/models/message/NativeResponse";
 import { NativeRequest } from "@web-eid.js/models/message/NativeRequest";
 import { Port } from "../../models/Browser/Runtime";
 import calculateJsonSize from "../../shared/utils/calculateJsonSize";
 import config from "../../config";
-import { throwAfterTimeout } from "../../shared/utils/timing";
-
-type UnwrappedPromise
-  = { resolve: (value?: any) => void; reject: (reason?: any) => void }
-  | null;
 
 export enum NativeAppState {
   UNINITIALIZED,
@@ -47,21 +40,23 @@ export default class NativeAppService {
   public state: NativeAppState = NativeAppState.UNINITIALIZED;
 
   private port: Port | null = null;
-  private pending: UnwrappedPromise = null;
-  private activeConnection: UnwrappedPromise = null;
 
   async connect(): Promise<{ version: string }> {
     this.state = NativeAppState.CONNECTING;
+    this.port  = browser.runtime.connectNative(config.NATIVE_APP_NAME);
 
-    this.port = browser.runtime.connectNative(config.NATIVE_APP_NAME);
     this.port.onDisconnect.addListener(this.disconnectListener.bind(this));
 
     try {
-      const message = await this.nextMessage(libraryConfig.NATIVE_APP_HANDSHAKE_TIMEOUT);
+      const message = await this.nextMessage(
+        libraryConfig.NATIVE_APP_HANDSHAKE_TIMEOUT,
+        new NativeUnavailableError(
+          `native application handshake timeout, ${libraryConfig.NATIVE_APP_HANDSHAKE_TIMEOUT}ms`
+        ),
+      );
 
       if (message.version) {
         this.state = NativeAppState.CONNECTED;
-        new Promise((resolve, reject) => this.activeConnection = { resolve, reject });
 
         return message;
       }
@@ -90,85 +85,50 @@ export default class NativeAppService {
     }
   }
 
-  async disconnectListener(): Promise<void> {
-    config.DEBUG && console.log("Native app disconnected");
+  disconnectListener(): void {
+    config.DEBUG && console.log("Native app disconnected.");
+
     // Accessing lastError when it exists stops chrome from throwing it unnecessarily.
     chrome?.runtime?.lastError;
 
-    // Defer active connection cleanup for Edge
-    await new Promise((resolve) => setTimeout(resolve));
-
-    this.activeConnection?.resolve();
     this.state = NativeAppState.DISCONNECTED;
-
-    this.pending?.reject?.(new UnknownError("native application closed the connection before a response"));
-    this.pending = null;
-  }
-
-  disconnectForcefully(): void {
-    this.state = NativeAppState.DISCONNECTED;
-
-    // At this point, requests should already be resolved.
-    // Rejecting a resolved promise is a NOOP.
-    this.pending?.reject?.(new UnknownError("extension closed connection to native app prematurely"));
-    this.pending = null;
-
-    this.port?.disconnect();
   }
 
   close(): void {
     if (this.state == NativeAppState.DISCONNECTED) return;
 
-    this.disconnectForcefully();
+    this.state = NativeAppState.DISCONNECTED;
+    this.port?.disconnect();
+
+    config.DEBUG && console.log("Native app port closed by extension.");
   }
 
-  send<T>(message: NativeRequest): Promise<T> {
+  async send<T>(message: NativeRequest, timeout: number, throwAfterTimeout: Error): Promise<T> {
     switch (this.state) {
       case NativeAppState.CONNECTED: {
-        return new Promise((resolve, reject) => {
-          this.pending = { resolve, reject };
+        config.DEBUG && console.log("Sending message to native app", JSON.stringify(message));
 
-          const onResponse = async (message: T): Promise<void> => {
-            this.port?.onMessage.removeListener(onResponse);
+        const messageSize = calculateJsonSize(message);
 
-            try {
-              await Promise.race([
-                this.activeConnection,
-                throwAfterTimeout(
-                  config.NATIVE_GRACEFUL_DISCONNECT_TIMEOUT,
-                  new Error("Native application did not disconnect after response")
-                ),
-              ]);
+        if (messageSize > config.NATIVE_MESSAGE_MAX_BYTES) {
+          throw new Error(`native application message exceeded ${config.NATIVE_MESSAGE_MAX_BYTES} bytes`);
+        }
 
-            } catch (error) {
-              console.error(error);
-              this.disconnectForcefully();
+        this.port?.postMessage(message);
 
-            } finally {
-              const error = (message as unknown as NativeFailureResponse)?.error;
+        try {
+          const response = await this.nextMessage(timeout, throwAfterTimeout);
 
-              if (error) {
-                reject(deserializeError(error));
-              } else {
-                resolve(message);
-              }
+          this.close();
 
-              this.pending = null;
-            }
-          };
+          return response;
+        } catch (error) {
+          console.error(error);
 
-          this.port?.onMessage.addListener(onResponse);
+          this.close();
 
-          config.DEBUG && console.log("Sending message to native app", JSON.stringify(message));
-
-          const messageSize = calculateJsonSize(message);
-
-          if (messageSize > config.NATIVE_MESSAGE_MAX_BYTES) {
-            throw new Error(`native application message exceeded ${config.NATIVE_MESSAGE_MAX_BYTES} bytes`);
-          }
-
-          this.port?.postMessage(message);
-        });
+          throw error;
+        }
       }
 
       case NativeAppState.UNINITIALIZED: {
@@ -197,7 +157,7 @@ export default class NativeAppService {
     }
   }
 
-  nextMessage(timeout: number): Promise<any> {
+  nextMessage(timeout: number, throwAfterTimeout: Error): Promise<any> {
     return new Promise((resolve, reject) => {
       let cleanup: (() => void) | null = null;
       let timer: ReturnType<typeof setTimeout> | null = null;
@@ -227,9 +187,7 @@ export default class NativeAppService {
       timer = setTimeout(
         () => {
           cleanup?.();
-          reject(new NativeUnavailableError(
-            `a message from native application was expected, but message wasn't received in ${timeout}ms`
-          ));
+          reject(throwAfterTimeout);
         },
         timeout,
       );

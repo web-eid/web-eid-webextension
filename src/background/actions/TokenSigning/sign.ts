@@ -34,7 +34,6 @@ import NativeAppService from "../../services/NativeAppService";
 import config from "../../../config";
 import errorToResponse from "./errorToResponse";
 import threeLetterLanguageCodes from "./threeLetterLanguageCodes";
-import { throwAfterTimeout } from "../../../shared/utils/timing";
 import tokenSigningResponse from "../../../shared/tokenSigningResponse";
 
 
@@ -128,10 +127,11 @@ export default async function sign(
       },
     };
 
-    const response = await Promise.race([
-      nativeAppService.send<NativeSignResponse>(message),
-      throwAfterTimeout(config.TOKEN_SIGNING_USER_INTERACTION_TIMEOUT, new UserTimeoutError()),
-    ]);
+    const response = await nativeAppService.send<NativeSignResponse>(
+      message,
+      config.TOKEN_SIGNING_USER_INTERACTION_TIMEOUT,
+      new UserTimeoutError(),
+    );
 
     if (!response?.signature) {
       return tokenSigningResponse<TokenSigningErrorResponse>("technical_error", nonce);

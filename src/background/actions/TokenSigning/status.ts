@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-import { NativeQuitRequest } from "@web-eid.js/models/message/NativeRequest";
+import UnknownError from "@web-eid.js/errors/UnknownError";
 
 import {
   TokenSigningErrorResponse,
@@ -28,8 +28,10 @@ import {
 } from "../../../models/TokenSigning/TokenSigningResponse";
 
 import NativeAppService from "../../services/NativeAppService";
+import config from "../../../config";
 import errorToResponse from "./errorToResponse";
 import tokenSigningResponse from "../../../shared/tokenSigningResponse";
+
 
 export default async function status(
   nonce: string,
@@ -46,12 +48,11 @@ export default async function status(
       throw new Error("missing native application version");
     }
 
-    const message: NativeQuitRequest = {
-      command:   "quit",
-      arguments: {},
-    };
-
-    await nativeAppService.send(message);
+    await nativeAppService.send(
+      { command: "quit", arguments: {} },
+      config.NATIVE_GRACEFUL_DISCONNECT_TIMEOUT,
+      new UnknownError("native application failed to close gracefully"),
+    );
 
     return tokenSigningResponse<TokenSigningStatusResponse>("ok", nonce, { version });
   } catch (error) {
