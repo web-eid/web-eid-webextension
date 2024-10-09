@@ -36,7 +36,6 @@ import NativeAppService from "../services/NativeAppService";
 import actionErrorHandler from "../../shared/actionErrorHandler";
 import config from "../../config";
 import { getSenderUrl } from "../../shared/utils/sender";
-import { throwAfterTimeout } from "../../shared/utils/timing";
 
 export default async function getSigningCertificate(
   sender: MessageSender,
@@ -63,10 +62,11 @@ export default async function getSigningCertificate(
       },
     };
 
-    const response = await Promise.race([
-      nativeAppService.send<NativeGetSigningCertificateResponse>(message),
-      throwAfterTimeout(userInteractionTimeout, new UserTimeoutError()),
-    ]);
+    const response = await nativeAppService.send<NativeGetSigningCertificateResponse>(
+      message,
+      userInteractionTimeout,
+      new UserTimeoutError(),
+    );
 
     const isResponseValid = (
       response?.certificate &&

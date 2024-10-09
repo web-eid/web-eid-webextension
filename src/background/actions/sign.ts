@@ -36,7 +36,6 @@ import NativeAppService from "../services/NativeAppService";
 import actionErrorHandler from "../../shared/actionErrorHandler";
 import config from "../../config";
 import { getSenderUrl } from "../../shared/utils/sender";
-import { throwAfterTimeout } from "../../shared/utils/timing";
 
 
 export default async function sign(
@@ -71,10 +70,11 @@ export default async function sign(
       },
     };
 
-    const response = await Promise.race([
-      nativeAppService.send<NativeSignResponse>(message),
-      throwAfterTimeout(userInteractionTimeout, new UserTimeoutError()),
-    ]);
+    const response = await nativeAppService.send<NativeSignResponse>(
+      message,
+      userInteractionTimeout,
+      new UserTimeoutError(),
+    );
 
     const isResponseValid = (
       response?.signature &&

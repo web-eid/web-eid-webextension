@@ -32,7 +32,6 @@ import UnknownError from "@web-eid.js/errors/UnknownError";
 import actionErrorHandler from "../../shared/actionErrorHandler";
 import config from "../../config";
 import { getSenderUrl } from "../../shared/utils/sender";
-import { throwAfterTimeout } from "../../shared/utils/timing";
 
 export default async function authenticate(
   challengeNonce: string,
@@ -62,11 +61,11 @@ export default async function authenticate(
       },
     };
 
-    const response = await Promise.race([
-      nativeAppService.send<NativeAuthenticateResponse>(message),
-
-      throwAfterTimeout(userInteractionTimeout, new UserTimeoutError()),
-    ]);
+    const response = await nativeAppService.send<NativeAuthenticateResponse>(
+      message,
+      userInteractionTimeout,
+      new UserTimeoutError(),
+    );
 
     config.DEBUG && console.log("Authenticate: authentication token received");
 

@@ -27,6 +27,7 @@ import {
 } from "@web-eid.js/models/message/ExtensionResponse";
 
 import Action from "@web-eid.js/models/Action";
+import UnknownError from "@web-eid.js/errors/UnknownError";
 import VersionMismatchError from "@web-eid.js/errors/VersionMismatchError";
 import { serializeError } from "@web-eid.js/utils/errorSerializer";
 
@@ -48,10 +49,11 @@ export default async function status(libraryVersion: string): Promise<ExtensionS
         : status.version
     );
 
-    await nativeAppService.send({
-      command:   "quit",
-      arguments: {},
-    });
+    await nativeAppService.send(
+      { command: "quit", arguments: {} },
+      config.NATIVE_GRACEFUL_DISCONNECT_TIMEOUT,
+      new UnknownError("native application failed to close gracefully"),
+    );
 
     const componentVersions = {
       library:   libraryVersion,
