@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+
+    <script src="browser-polyfill.min.js"></script>
+
+    <style>
+      @media (prefers-color-scheme: dark) {
+        body {
+          color: #FFF;
+          background-color: #333;
+        }
+      }
+
+      body {
+        font-size: 16px;
+        margin: 1rem;
+        box-sizing: border-box;
+      }
+
+      main {
+        max-width: 320px;
+      }
+
+      .switch {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        > input[type="checkbox"]:checked {
+          --switch-check-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22-4%20-4%208%208%22%3E%3Ccircle%20r%3D%223%22%20fill%3D%22white%22%20/%3E%3C/svg%3E");
+          
+          background-position: right center;
+          background-color: #0061E0;
+          border-color: #0061E0;
+        }
+  
+        > input[type="checkbox"] {
+          --switch-check-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%22-4%20-4%208%208%22%3E%3Ccircle%20r%3D%223%22%20fill%3D%22%2300000070%22%20/%3E%3C/svg%3E");
+          
+          appearance: none;
+          background-image: var(--switch-check-image);
+          background-repeat: no-repeat;
+          background-position: left center;
+          background-color: #EDEDED;
+          
+          box-sizing: border-box;
+          height: 1.2em;
+          width: 2.4em;
+
+          border: 1px solid #00000070;
+          border-radius: 2em;
+
+          transition: background-position 150ms ease-in-out;
+        }
+      }
+
+      .warning {
+        background: color-mix(in srgb, orange 5%, transparent);
+        margin: 0.5rem 0;
+        padding: 0.8rem;
+
+        font-size: 0.8rem;
+
+        &.storage-not-allowed,
+        &.open-devtools-again {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <div class="switch">
+        <label for="devtools">Enable developer tools</label>
+        <input type="checkbox" id="devtools">
+      </div>
+      <div class="warning storage-not-allowed">The extension needs storage permissions to persist the settings.</div>
+      <div class="warning open-devtools-again">For the "Web eID" tab to appear in the browser's DevTools, you will need to close an existing DevTools and reopen it.</div>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

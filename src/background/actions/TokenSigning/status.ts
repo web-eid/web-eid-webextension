@@ -27,16 +27,26 @@ import {
   TokenSigningStatusResponse,
 } from "../../../models/TokenSigning/TokenSigningResponse";
 
+import { MessageSender } from "../../../models/Browser/Runtime";
 import NativeAppService from "../../services/NativeAppService";
-import config from "../../../config";
+import { config } from "../../../shared/configManager";
 import errorToResponse from "./errorToResponse";
 import tokenSigningResponse from "../../../shared/tokenSigningResponse";
 
+import Logger from "../../../shared/Logger";
+
+const logger = new Logger("TokenSigning/status.ts");
+
 
 export default async function status(
+  sender: MessageSender,
   nonce: string,
 ): Promise<TokenSigningStatusResponse | TokenSigningErrorResponse> {
-  const nativeAppService = new NativeAppService();
+  logger.tabId = sender.tab?.id;
+
+  const nativeAppService = new NativeAppService(sender.tab?.id);
+
+  logger.log("Status requested");
 
   try {
     const nativeAppStatus = await nativeAppService.connect();
@@ -48,15 +58,21 @@ export default async function status(
       throw new Error("missing native application version");
     }
 
+    logger.info("Closing native app by sending the 'quit' command");
+
     await nativeAppService.send(
       { command: "quit", arguments: {} },
       config.NATIVE_GRACEFUL_DISCONNECT_TIMEOUT,
       new UnknownError("native application failed to close gracefully"),
     );
 
+    logger.info("Returning success response");
+
     return tokenSigningResponse<TokenSigningStatusResponse>("ok", nonce, { version });
   } catch (error) {
-    console.error(error);
+    logger.info("Status check failed");
+    logger.error(error);
+
     return errorToResponse(nonce, error);
   } finally {
     nativeAppService.close();

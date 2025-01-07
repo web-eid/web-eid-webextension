@@ -20,37 +20,24 @@
  * SOFTWARE.
  */
 
-import {
-  TokenSigningResponse,
-  TokenSigningResult,
-} from "../models/TokenSigning/TokenSigningResponse";
+import defaultConfig from "../config";
 
-import { config } from "../shared/configManager";
+type Config = {
+  -readonly [key in keyof typeof defaultConfig]: typeof defaultConfig[key];
+};
 
-/**
- * Helper function to compose a token signing response message
- *
- * @param result Token signing result from the native application
- * @param nonce  The nonce related to the action
- * @param optional Optional message fields to be included in the response
- *
- * @returns A token signing response object
- */
-export default function tokenSigningResponse<T extends TokenSigningResponse>(
-  result: TokenSigningResult,
-  nonce: string,
-  optional?: Record<string, any>
-): T {
-  const response = {
-    nonce,
-    result,
+const config = JSON.parse(JSON.stringify(defaultConfig)) as Config;
 
-    src:       "background.js",
-    extension: config.VERSION,
-    isWebeid:  true,
-
-    ...(optional ? optional : {}),
-  };
-
-  return response as T;
+function setConfigOverride<K extends keyof typeof defaultConfig>(key: K, value: typeof defaultConfig[K]) {
+  if (value === null) {
+    value = defaultConfig[key];
+  }
+  
+  config[key] = value;
 }
+
+export {
+  config,
+  defaultConfig,
+  setConfigOverride,
+};

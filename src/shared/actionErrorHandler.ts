@@ -27,7 +27,7 @@ import VersionMismatchError from "@web-eid.js/errors/VersionMismatchError";
 import { serializeError } from "@web-eid.js/utils/errorSerializer";
 
 import checkCompatibility from "./utils/checkCompatibility";
-import config from "../config";
+import { config } from "../shared/configManager";
 
 export default function actionErrorHandler(
   action:

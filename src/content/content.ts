@@ -28,10 +28,27 @@ import config from "../config";
 import injectPageScript from "./TokenSigning/injectPageScript";
 import tokenSigningResponse from "../shared/tokenSigningResponse";
 
+import Logger from "../shared/Logger";
+
+const logger = new Logger("content.ts", { isContentScript: true });
+
 function isWebeidEvent(event: MessageEvent): boolean {
   return (
     event.source === window &&
     event.data?.action?.startsWith?.("web-eid:")
+  );
+}
+
+function isWebeidResponseEvent(event: MessageEvent): boolean {
+  return (
+    event.source === window &&
+    event.data?.action?.startsWith?.("web-eid:") &&
+    (
+      event.data.action == Action.WARNING    ||
+      event.data.action.endsWith("-success") ||
+      event.data.action.endsWith("-failure") ||
+      event.data.action.endsWith("-ack")
+    )
   );
 }
 
@@ -48,13 +65,21 @@ async function send(message: object): Promise<object | void> {
   return response;
 }
 
+async function ack(
+  action: Action.AUTHENTICATE_ACK | Action.GET_SIGNING_CERTIFICATE_ACK | Action.SIGN_ACK | Action.STATUS_ACK,
+  origin: string
+): Promise<void> {
+  const message = { action };
+
+  await logger.devToolsEvent("response", "Website", "Extension (content)", message);
+  window.postMessage(message, origin);
+}
+
 window.addEventListener("message", async (event) => {
   if (isWebeidEvent(event)) {
-    // Warning messages should be ignored.
-    // When there are deprecation warnings, these messages would be sent by the content script and handled by the Web-eID library.
-    if (event.data.action === Action.WARNING) return;
+    if (isWebeidResponseEvent(event)) return;
 
-    config.DEBUG && console.log("Web-eID event: ", JSON.stringify(event));
+    logger.devToolsEvent("request", "Website", "Extension (content)", event.data);
 
     if (!window.isSecureContext) {
       const response = {
@@ -62,55 +87,60 @@ window.addEventListener("message", async (event) => {
         error:  new ContextInsecureError(),
       };
 
-      window.postMessage(response, event.origin);
+      logger.devToolsEvent("response", "Website", "Extension (content)", response);
 
+      window.postMessage(response, event.origin);
     } else {
       let response;
 
       switch (event.data.action) {
         case Action.STATUS: {
-          window.postMessage({ action: Action.STATUS_ACK }, event.origin);
+          await ack(Action.STATUS_ACK, event.origin);
           response = await send(event.data);
           break;
         }
 
         case Action.AUTHENTICATE: {
-          window.postMessage({ action: Action.AUTHENTICATE_ACK }, event.origin);
+          await ack(Action.AUTHENTICATE_ACK, event.origin);
           response = await send(event.data);
           break;
         }
 
         case Action.SIGN: {
-          window.postMessage({ action: Action.SIGN_ACK }, event.origin);
+          await ack(Action.SIGN_ACK, event.origin);
           response = await send(event.data);
           break;
         }
 
         case Action.GET_SIGNING_CERTIFICATE: {
-          window.postMessage({ action: Action.GET_SIGNING_CERTIFICATE_ACK }, event.origin);
+          await ack(Action.GET_SIGNING_CERTIFICATE_ACK, event.origin);
           response = await send(event.data);
           break;
         }
       }
 
       if (response) {
+        logger.devToolsEvent("response", "Website", "Extension (content)", response);
+
         window.postMessage(response, event.origin);
       }
     }
   } else if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY && isTokenSigningEvent(event)) {
-    config.DEBUG && console.log("TokenSigning event:", JSON.stringify(event));
+    logger.devToolsEvent("request", "Website", "Extension (content)", event.data);
 
     if (!window.isSecureContext) {
-      console.error(new ContextInsecureError());
+      logger.error(new ContextInsecureError());
 
       const nonce    = event.data.nonce;
       const response = tokenSigningResponse<TokenSigningErrorResponse>("technical_error", nonce);
+
+      logger.devToolsEvent("response", "Website", "Extension (content)", response);
 
       window.postMessage(response, event.origin);
     } else {
       const response = await send(event.data) as { warnings?: [], [key: string]: any } | void;
 
-      response?.warnings?.forEach((warning) => console.warn(warning));
+      logger.devToolsEvent("response", "Website", "Extension (content)", response);
 
       window.postMessage(response, event.origin);
     }
