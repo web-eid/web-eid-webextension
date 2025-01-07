@@ -27,7 +27,11 @@ import libraryConfig from "@web-eid.js/config";
 
 import Mutex from "../../shared/Mutex";
 import calculateJsonSize from "../../shared/utils/calculateJsonSize";
-import config from "../../config";
+import { config } from "../../shared/configManager";
+
+import Logger from "../../shared/Logger";
+
+const logger = new Logger("NativeAppService.ts");
 
 type NativeAppPendingRequest =
   | { resolve?: (value: PromiseLike<any>) => void; reject?: (reason?: any) => void }
@@ -47,7 +51,13 @@ export default class NativeAppService {
 
   private pending: NativeAppPendingRequest = null;
 
+  constructor(tabId?: number) {
+    logger.tabId = tabId;
+  }
+
   async connect(): Promise<{ version: string }> {
+    logger.log("Connecting to the native application " + config.NATIVE_APP_NAME);
+
     this.state = NativeAppState.CONNECTING;
 
     try {
@@ -71,6 +81,8 @@ export default class NativeAppService {
       if (message.version) {
         this.state = NativeAppState.CONNECTED;
 
+        logger.info("Connected to the native application", message);
+
         return message;
       }
 
@@ -91,7 +103,8 @@ export default class NativeAppService {
   }
 
   close(error?: any): void {
-    config.DEBUG && console.log("Disconnecting from native app");
+    logger.info("Closing connection to native application");
+
     this.state = NativeAppState.DISCONNECTED;
 
     this.pending?.reject?.(error);
@@ -111,6 +124,8 @@ export default class NativeAppService {
           setTimeout(() => { reject(throwAfterTimeout); }, timeout );
 
           const onResponse = (message: any): void => {
+            logger.log("Response from native application", message);
+
             this.pending = null;
 
             if (message.error) {
@@ -120,13 +135,14 @@ export default class NativeAppService {
             }
           };
 
-          config.DEBUG && console.log("Sending message to native app", JSON.stringify(message));
-
           const messageSize = calculateJsonSize(message);
+
+          logger.info("Calculated message size", messageSize);
 
           if (messageSize > config.NATIVE_MESSAGE_MAX_BYTES) {
             throw new Error(`native application message exceeded ${config.NATIVE_MESSAGE_MAX_BYTES} bytes`);
           }
+          logger.log("Sending message to native application", message);
 
           browser.runtime.sendNativeMessage("application.id", message, onResponse);
         });

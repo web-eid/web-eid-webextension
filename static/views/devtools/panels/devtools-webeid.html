@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Web-eID Privacy</title>
+  <link rel="stylesheet" href="../style/main.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <input type="radio" name="page" id="nav-events" data-nav="events" checked>
+      <label for="nav-events">Events</label>
+  
+      <input type="radio" name="page" id="nav-log" data-nav="log">
+      <label for="nav-log">Log</label>
+      
+      <input type="radio" name="page" id="nav-settings" data-nav="settings">
+      <label for="nav-settings">Settings</label>
+    </nav>
+
+    <div class="version" title="Extension version"></div>
+  </header>
+  <main>
+    <section data-page="events">
+      <div id="event-list"></div>
+      <pre id="event-details"></pre>
+    </section>
+    <section data-page="log">
+      <div class="toolbar">
+        <div class="group">
+          <input type="button" value="Clear" id="clear-log">
+        </div>
+        <div class="group">
+          <span>Log levels:</span>
+          <label><input type="checkbox" data-logfilter="log" checked> Log</label>
+          <label><input type="checkbox" data-logfilter="warn" checked> Warning</label>
+          <label><input type="checkbox" data-logfilter="error" checked> Error</label>
+          <label><input type="checkbox" data-logfilter="info"> Info</label>
+          <label><input type="checkbox" data-logfilter="debug"> Debug</label>
+          <label><input type="checkbox" data-logfilter="event"> Event</label>
+        </div>
+      </div>
+      <div id="log-messages"></div>
+    </section>
+    <section data-page="settings">
+      <div class="warning">The settings you change here apply to all pages and persist even after closing DevTools.</div>
+      <table>
+        <tbody id="settings-list"></tbody>
+      </table>
+      
+    </section>
+  </main>
+
+  <template id="event-template">
+    <div class="event">
+      <input type="radio" name="event">
+      <label>
+        <div>
+          <div class="layer-1"></div>
+          <div class="direction"></div>
+          <div class="layer-2"></div>
+        </div>
+        <div>
+          <div class="name"></div>
+          <div class="time"></div>
+        </div>
+      </label>
+    </div>
+  </template>
+
+  <template id="log-entry-template">
+    <div class="entry">
+      <pre class="time"></pre>
+      <pre class="message"></pre>
+      <pre class="source"></div>
+    </div>
+  </template>
+
+  <template id="setting-template">
+    <tr>
+      <th></th>
+      <td><input class="value" required></td>
+      <td><input class="reset" type="button" value="Reset"></td>
+    </tr>
+  </template>
+
+  <script type="module" src="devtools-webeid.js"></script>
+</body>
+
+</html>

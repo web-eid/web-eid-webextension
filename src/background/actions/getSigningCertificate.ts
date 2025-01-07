@@ -34,8 +34,11 @@ import {
 import { MessageSender } from "../../models/Browser/Runtime";
 import NativeAppService from "../services/NativeAppService";
 import actionErrorHandler from "../../shared/actionErrorHandler";
-import config from "../../config";
 import { getSenderUrl } from "../../shared/utils/sender";
+
+import Logger from "../../shared/Logger";
+
+const logger = new Logger("getSigningCertificate.ts");
 
 export default async function getSigningCertificate(
   sender: MessageSender,
@@ -43,14 +46,16 @@ export default async function getSigningCertificate(
   userInteractionTimeout: number,
   lang?: string,
 ): Promise<ExtensionGetSigningCertificateResponse | ExtensionFailureResponse> {
+  logger.tabId = sender.tab?.id;
+
+  logger.log("Certificate requested");
+
   let nativeAppService: NativeAppService | undefined;
   let nativeAppStatus: { version: string } | undefined;
 
   try {
-    nativeAppService = new NativeAppService();
+    nativeAppService = new NativeAppService(sender.tab?.id);
     nativeAppStatus = await nativeAppService.connect();
-
-    config.DEBUG && console.log("getSigningCertificate: connected to native", nativeAppStatus);
 
     const message: NativeGetSigningCertificateRequest = {
       command: "get-signing-certificate",
@@ -74,12 +79,17 @@ export default async function getSigningCertificate(
     );
 
     if (isResponseValid) {
+      logger.info("Returning success response");
+
       return { action: Action.GET_SIGNING_CERTIFICATE_SUCCESS, ...response };
     } else {
+      logger.info("Certificate response is invalid");
+
       throw new UnknownError("unexpected response from native application");
     }
   } catch (error: any) {
-    console.error("GetSigningCertificate:", error);
+    logger.info("Certificate request failed");
+    logger.error(error);
 
     return actionErrorHandler(Action.GET_SIGNING_CERTIFICATE_FAILURE, error, libraryVersion, nativeAppStatus?.version);
   } finally {

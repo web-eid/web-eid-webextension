@@ -20,37 +20,37 @@
  * SOFTWARE.
  */
 
-import {
-  TokenSigningResponse,
-  TokenSigningResult,
-} from "../models/TokenSigning/TokenSigningResponse";
+export default interface Devtools {
 
-import { config } from "../shared/configManager";
+  /**
+   * Interact with the window that Developer tools are attached to (inspected window).
+   * This includes obtaining the tab ID for the inspected page, evaluate the code
+   * in the context of the inspected window, reload the page, or obtain the list of resources within the page.
+   */
+  inspectedWindow: Window;
 
-/**
- * Helper function to compose a token signing response message
- *
- * @param result Token signing result from the native application
- * @param nonce  The nonce related to the action
- * @param optional Optional message fields to be included in the response
- *
- * @returns A token signing response object
- */
-export default function tokenSigningResponse<T extends TokenSigningResponse>(
-  result: TokenSigningResult,
-  nonce: string,
-  optional?: Record<string, any>
-): T {
-  const response = {
-    nonce,
-    result,
+  /**
+   * Obtain information about network requests associated with the window that
+   * the Developer Tools are attached to (the inspected window).
+   */
+  network: any;
 
-    src:       "background.js",
-    extension: config.VERSION,
-    isWebeid:  true,
+  /**
+   * Create User Interface panels that will be displayed inside User Agent Developer Tools.
+   */
+  panels: {
+    create: (title: string, iconPath: string, pagePath: string) => Promise<ExtensionPanel>;
+  };
+}
 
-    ...(optional ? optional : {}),
+export interface ExtensionPanel {
+  onShown:  {
+    addListener:    (listener: () => void) => void;
+    removeListener: (listener: () => void) => void;
   };
 
-  return response as T;
+  onHidden: {
+    addListener:    (listener: () => void) => void;
+    removeListener: (listener: () => void) => void;
+  };
 }

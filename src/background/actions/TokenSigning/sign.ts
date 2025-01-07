@@ -30,11 +30,16 @@ import {
 } from "../../../models/TokenSigning/TokenSigningResponse";
 
 import ByteArray from "../../../shared/ByteArray";
+import { MessageSender } from "../../../models/Browser/Runtime";
 import NativeAppService from "../../services/NativeAppService";
-import config from "../../../config";
+import { config } from "../../../shared/configManager";
 import errorToResponse from "./errorToResponse";
 import threeLetterLanguageCodes from "./threeLetterLanguageCodes";
 import tokenSigningResponse from "../../../shared/tokenSigningResponse";
+
+import Logger from "../../../shared/Logger";
+
+const logger = new Logger("TokenSigning/sign.ts");
 
 
 const digestCommandToHashFunction = {
@@ -60,6 +65,7 @@ const hashFunctionToLength = {
 } as Record<string, number>;
 
 export default async function sign(
+  sender: MessageSender,
   nonce: string,
   sourceUrl: string,
   certificate: string,
@@ -67,17 +73,21 @@ export default async function sign(
   algorithm: string,
   lang?: string,
 ): Promise<TokenSigningSignResponse | TokenSigningErrorResponse> {
+  logger.tabId = sender.tab?.id;
+
+  logger.log("Signing requested");
+  
   if (lang && Object.keys(threeLetterLanguageCodes).includes(lang)) {
     lang = threeLetterLanguageCodes[lang];
+    logger.info("Language code converted to three-letter code", lang);
   }
 
-  const nativeAppService = new NativeAppService();
+  const nativeAppService = new NativeAppService(sender.tab?.id);
 
   try {
     const warnings: Array<string> = [];
-    const nativeAppStatus = await nativeAppService.connect();
 
-    config.DEBUG && console.log("Sign: connected to native", nativeAppStatus);
+    await nativeAppService.connect();
 
     let hashFunction = (
       Object.keys(digestCommandToHashFunction).includes(algorithm)
@@ -85,11 +95,15 @@ export default async function sign(
         : algorithm
     );
 
+    logger.debug("Selected hashing function", hashFunction);
+
     const expectedHashByteLength = (
       Object.keys(hashFunctionToLength).includes(hashFunction)
         ? hashFunctionToLength[hashFunction]
         : undefined
     );
+
+    logger.debug("Hash byte length", expectedHashByteLength);
 
     const hashByteArray = new ByteArray().fromHex(hash);
 
@@ -113,6 +127,8 @@ export default async function sign(
       }
     }
 
+    warnings.forEach((message) => logger.warn(message));
+
     const message: NativeSignRequest = {
       command: "sign",
 
@@ -134,8 +150,10 @@ export default async function sign(
     );
 
     if (!response?.signature) {
+      logger.info("Signing failed. Expected 'signature' was not found in the response");
       return tokenSigningResponse<TokenSigningErrorResponse>("technical_error", nonce);
     } else {
+      logger.info("Returning success response");
       return tokenSigningResponse<TokenSigningSignResponse>("ok", nonce, {
         signature: new ByteArray().fromBase64(response.signature).toHex(),
 
@@ -143,7 +161,9 @@ export default async function sign(
       });
     }
   } catch (error) {
-    console.error(error);
+    logger.info("Signing failed");
+    logger.error(error);
+
     return errorToResponse(nonce, error);
   } finally {
     nativeAppService.close();

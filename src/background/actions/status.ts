@@ -31,16 +31,24 @@ import UnknownError from "@web-eid.js/errors/UnknownError";
 import VersionMismatchError from "@web-eid.js/errors/VersionMismatchError";
 import { serializeError } from "@web-eid.js/utils/errorSerializer";
 
+import { MessageSender } from "../../models/Browser/Runtime";
 import NativeAppService from "../services/NativeAppService";
 import checkCompatibility from "../../shared/utils/checkCompatibility";
-import config from "../../config";
+import { config } from "../../shared/configManager";
 
-export default async function status(libraryVersion: string): Promise<ExtensionStatusResponse | ExtensionFailureResponse> {
+import Logger from "../../shared/Logger";
+
+const logger = new Logger("status.ts");
+
+export default async function status(sender: MessageSender, libraryVersion: string): Promise<ExtensionStatusResponse | ExtensionFailureResponse> {
+  logger.tabId = sender.tab?.id;
+
+  logger.log("Status requested");
+
   const extensionVersion = config.VERSION;
-  const nativeAppService = new NativeAppService();
+  const nativeAppService = new NativeAppService(sender.tab?.id);
 
   try {
-
     const status = await nativeAppService.connect();
 
     const nativeApp = (
@@ -48,6 +56,8 @@ export default async function status(libraryVersion: string): Promise<ExtensionS
         ? status.version.substring(1)
         : status.version
     );
+
+    logger.info("Closing native app by sending the 'quit' command");
 
     await nativeAppService.send(
       { command: "quit", arguments: {} },
@@ -64,9 +74,13 @@ export default async function status(libraryVersion: string): Promise<ExtensionS
 
     const requiresUpdate = checkCompatibility(componentVersions);
 
+    logger.info("Checking requiresUpdate", requiresUpdate);
+
     if (requiresUpdate.extension || requiresUpdate.nativeApp) {
       throw new VersionMismatchError(undefined, componentVersions, requiresUpdate);
     }
+
+    logger.info("Returning success response");
 
     return {
       action: Action.STATUS_SUCCESS,
@@ -74,9 +88,10 @@ export default async function status(libraryVersion: string): Promise<ExtensionS
       ...componentVersions,
     };
   } catch (error: any) {
-    error.extension = extensionVersion;
+    logger.info("Status check failed");
+    logger.error(error);
 
-    console.error("Status:", error);
+    error.extension = extensionVersion;
 
     return {
       action: Action.STATUS_FAILURE,

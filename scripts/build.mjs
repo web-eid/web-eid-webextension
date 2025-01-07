@@ -111,10 +111,17 @@ const targets = {
     await cp("./static/icons", "./dist/safari");
 
     rem(
-      "Copying static consent pages to Firefox dist directory"
+      "Copying static pages to Firefox dist directory"
     );
     await cp("./static/_locales", "./dist/firefox/_locales");
     await cp("./static/views", "./dist/firefox/views");
+    await cp("./node_modules/webextension-polyfill/dist", "./dist/firefox/views");
+
+    rem(
+      "Copying static pages to Chrome dist directory"
+    );
+    await cp("./static/views", "./dist/chrome/views");
+    await cp("./node_modules/webextension-polyfill/dist", "./dist/chrome/views");
 
     rem(
       "Setting up the Firefox manifest"

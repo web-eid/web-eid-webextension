@@ -1,0 +1,65 @@
+section[data-page="log"] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  #log-messages {
+    display: flex;
+    flex-direction: column;
+    overflow: auto;
+
+    .entry {
+      display: flex;
+      padding: var(--spacing-m);
+      border: 1px dotted var(--color-border);
+  
+      border-left: var(--spacing-m) solid color-mix(in srgb, var(--color-log-level-default) 50%, transparent);
+  
+      &.type-info {
+        border-left-color: color-mix(in srgb, var(--color-log-level-info) 50%, transparent);
+        background-color: color-mix(in srgb, var(--color-log-level-info) 5%, transparent);
+      }
+  
+      &.type-warn {
+        border-left-color: color-mix(in srgb, var(--color-log-level-warn) 50%, transparent);
+        background-color: color-mix(in srgb, var(--color-log-level-warn) 5%, transparent);
+      }
+  
+      &.type-error {
+        border-left-color: color-mix(in srgb, var(--color-log-level-error) 50%, transparent);
+        background-color: color-mix(in srgb, var(--color-log-level-error) 5%, transparent);
+      }
+
+      &.type-event {
+        border-left-color: color-mix(in srgb, var(--color-log-level-event) 50%, transparent);
+        background-color: color-mix(in srgb, var(--color-log-level-event) 5%, transparent);
+      }
+  
+      .time {
+        flex: 0 0 6rem;
+        color: var(--color-log-timestamp);
+      }
+  
+      .message {
+        flex: 1 1 100%;
+        white-space: pre-wrap;
+      }
+  
+      .source {
+        flex: 0 0 auto;
+        margin-left: var(--spacing-l);
+  
+        color: var(--color-text-note);
+      }
+    }
+  }
+
+  
+}
+
+body:not(:has([data-logfilter="log"]:checked))   #log-messages .entry.type-log   { display: none; }
+body:not(:has([data-logfilter="warn"]:checked))  #log-messages .entry.type-warn  { display: none; }
+body:not(:has([data-logfilter="error"]:checked)) #log-messages .entry.type-error { display: none; }
+body:not(:has([data-logfilter="info"]:checked))  #log-messages .entry.type-info  { display: none; }
+body:not(:has([data-logfilter="debug"]:checked)) #log-messages .entry.type-debug { display: none; }
+body:not(:has([data-logfilter="event"]:checked)) #log-messages .entry.type-event { display: none; }

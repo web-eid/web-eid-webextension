@@ -48,11 +48,6 @@ The Web eID extension for Safari is built as a [Safari web extension](https://de
     TOKEN_SIGNING_BACKWARDS_COMPATIBILITY=true npm run clean build package
     ```
 
-    During development, for additional logging, set the `DEBUG` environment variable to `true`.
-    ```bash
-    DEBUG=true npm run clean build package
-    ```
-
 5. Load in Firefox as a Temporary Extension
     1. Open `about:debugging#/runtime/this-firefox`
     2. Click "Load temporary Add-on..." and open `/web-eid-webextension/dist/manifest.json`
