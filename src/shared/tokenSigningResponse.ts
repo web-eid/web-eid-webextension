@@ -6,7 +6,7 @@ import {
   TokenSigningResult,
 } from "../models/TokenSigning/TokenSigningResponse";
 
-import config from "../config";
+import { config } from "../shared/configManager";
 
 /**
  * Helper function to compose a token signing response message

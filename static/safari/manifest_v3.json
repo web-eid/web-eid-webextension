@@ -29,8 +29,12 @@
       "background.js"
     ]
   },
+  "devtools_page": "views/devtools/devtools.html",
   "permissions": [
     "nativeMessaging"
+  ],
+  "optional_permissions": [
+    "devtools"
   ],
   "host_permissions": [
     "*://*/*"

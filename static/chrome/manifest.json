@@ -27,8 +27,15 @@
   "background": {
     "service_worker": "background.js"
   },
+  "options_ui": {
+    "page": "views/options.html"
+  },
+  "devtools_page": "views/devtools/devtools.html",
   "permissions": [
     "nativeMessaging"
+  ],
+  "optional_permissions": [
+    "storage"
   ],
   "host_permissions": [
     "*://*/*"

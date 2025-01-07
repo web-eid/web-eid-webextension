@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: Estonian Information System Authority
 // SPDX-License-Identifier: MIT
 
+import Devtools from "./Browser/Devtools";
+import ExtensionStorage from "./Browser/ExtensionStorage";
 import Permissions from "./Browser/Permissions";
 import Runtime from "./Browser/Runtime";
 import Tabs from "./Browser/Tabs";
@@ -38,4 +40,18 @@ export default interface Browser {
    * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs
    */
   tabs: Tabs;
+
+  /**
+   * Enables extensions to interact with the browser's Developer Tools.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/devtools
+   */
+  devtools: Devtools;
+
+  /**
+   * Access the extension storage areas.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/storage
+   */
+  storage: ExtensionStorage;
 }
