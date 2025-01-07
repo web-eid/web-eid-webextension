@@ -1,18 +1,21 @@
 // SPDX-FileCopyrightText: Estonian Information System Authority
 // SPDX-License-Identifier: MIT
 
+import { ExtensionAuthenticateResponse, ExtensionFailureResponse } from "@web-eid.js/models/message/ExtensionResponse";
 import Action from "@web-eid.js/models/Action";
 import { NativeAuthenticateRequest } from "@web-eid.js/models/message/NativeRequest";
 import { NativeAuthenticateResponse } from "@web-eid.js/models/message/NativeResponse";
 import UserTimeoutError from "@web-eid.js/errors/UserTimeoutError";
 
-import { ExtensionAuthenticateResponse, ExtensionFailureResponse } from "@web-eid.js/models/message/ExtensionResponse";
 import { MessageSender } from "../../models/Browser/Runtime";
 import NativeAppService from "../services/NativeAppService";
 import UnknownError from "@web-eid.js/errors/UnknownError";
 import actionErrorHandler from "../../shared/actionErrorHandler";
-import config from "../../config";
 import { getSenderUrl } from "../../shared/utils/sender";
+
+import Logger from "../../shared/Logger";
+
+const logger = new Logger("authenticate.ts");
 
 export default async function authenticate(
   challengeNonce: string,
@@ -21,14 +24,16 @@ export default async function authenticate(
   userInteractionTimeout: number,
   lang?: string,
 ): Promise<ExtensionAuthenticateResponse | ExtensionFailureResponse> {
+  logger.tabId = sender.tab?.id;
+
+  logger.log("Authentication requested");
+
   let nativeAppService: NativeAppService | undefined;
   let nativeAppStatus: { version: string } | undefined;
 
   try {
-    nativeAppService = new NativeAppService();
+    nativeAppService = new NativeAppService(sender.tab?.id);
     nativeAppStatus  = await nativeAppService.connect();
-
-    config.DEBUG && console.log("Authenticate: connected to native", nativeAppStatus);
 
     const message: NativeAuthenticateRequest = {
       command: "authenticate",
@@ -48,8 +53,6 @@ export default async function authenticate(
       new UserTimeoutError(),
     );
 
-    config.DEBUG && console.log("Authenticate: authentication token received");
-
     const isResponseValid = (
       response?.unverifiedCertificate &&
       response?.algorithm             &&
@@ -59,12 +62,17 @@ export default async function authenticate(
     );
 
     if (isResponseValid) {
+      logger.info("Returning success response");
+
       return { action: Action.AUTHENTICATE_SUCCESS, ...response };
     } else {
+      logger.info("Authentication response is invalid");
+
       throw new UnknownError("unexpected response from native application");
     }
   } catch (error) {
-    console.error("Authenticate:", error);
+    logger.info("Authentication failed");
+    logger.error(error);
 
     return actionErrorHandler(Action.AUTHENTICATE_FAILURE, error, libraryVersion, nativeAppStatus?.version);
   } finally {

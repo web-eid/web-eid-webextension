@@ -10,10 +10,6 @@ export default interface Runtime {
    */
   id: string;
 
-  onMessage: {
-    addListener: (callback: OnMessageCallback) => void;
-  };
-
   /**
    * Sends a single message from an extension to a native application.
    *
@@ -88,6 +84,25 @@ export default interface Runtime {
    * Get the complete manifest.json file, deserialized from JSON to an object.
    */
   getManifest: () => any;
+
+  /**
+   * Fired when a connection is made with either an extension process or a content script.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onConnect
+   */
+  onConnect: {
+    addListener:    (listener: (port: Port) => void) => void;
+    removeListener: (listener: () => void) => void;
+  };
+
+  /**
+   * Use this event to listen for messages from another part of your extension.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
+   */
+  onMessage: {
+    addListener: (callback: OnMessageCallback) => void;
+  };
 }
 
 export interface Port {
