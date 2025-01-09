@@ -30,13 +30,13 @@
  *  new ByteArray().fromHex("48656c6c6f").valueOf()      // [72, 101, 108, 108, 111]
  */
 export default class ByteArray {
-  data: number[];
+  data: Array<number>;
 
   get length(): number {
     return this.data.length;
   }
 
-  constructor(byteArray?: number[]) {
+  constructor(byteArray?: Array<number>) {
     this.data = byteArray || [];
   }
 
@@ -68,7 +68,7 @@ export default class ByteArray {
     return this.data.map((byte) => ("0" + (byte & 0xFF).toString(16)).slice(-2)).join("");
   }
 
-  valueOf(): number[] {
+  valueOf(): Array<number> {
     return this.data;
   }
 }

@@ -9,6 +9,7 @@ import {
   pkg,
   write,
   getSourceDateEpoch,
+  manifestVersion,
 } from "./build-utils.mjs";
 
 let sourceDateEpoch;
@@ -36,9 +37,17 @@ const targets = {
   },
 
   async bundle() {
-    rem(
-      `Setting version to ${pkg.version}`
-    );
+    if (pkg.version == manifestVersion) {
+      rem(
+        `Build version: ${pkg.version}`
+      );
+    } else {
+      rem(
+        `Build version:    ${pkg.version}`,
+        `Manifest version: ${manifestVersion}`
+      );
+    }
+
     await replace("./dist/src/config.js", "{{package.version}}", pkg.version);
 
     rem(
@@ -112,19 +121,19 @@ const targets = {
       "Setting up the Firefox manifest"
     );
     await cp("./static/firefox/manifest.json", "./dist/firefox/manifest.json");
-    await replace("./dist/firefox/manifest.json", "{{package.version}}", pkg.version);
+    await replace("./dist/firefox/manifest.json", "{{package.version}}", manifestVersion);
 
     rem(
       "Setting up the Chrome manifest"
     );
     await cp("./static/chrome/manifest.json", "./dist/chrome/manifest.json");
-    await replace("./dist/chrome/manifest.json", "{{package.version}}", pkg.version);
+    await replace("./dist/chrome/manifest.json", "{{package.version}}", manifestVersion);
 
     rem(
       "Setting up the Safari manifest"
     );
     await cp("./static/safari/manifest.json", "./dist/safari/manifest.json");
-    await replace("./dist/safari/manifest.json", "{{package.version}}", pkg.version);
+    await replace("./dist/safari/manifest.json", "{{package.version}}", manifestVersion);
   },
 
   async package() {

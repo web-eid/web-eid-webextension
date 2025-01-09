@@ -1,4 +1,5 @@
 import path from "path";
+import { fileURLToPath } from "url";
 
 import alias from "@rollup/plugin-alias";
 import cleanup from "rollup-plugin-cleanup";
@@ -7,7 +8,7 @@ import license from "rollup-plugin-license";
 import polyfill from "rollup-plugin-polyfill";
 import resolve from "@rollup/plugin-node-resolve";
 
-const projectRootDir = path.resolve(__dirname);
+const projectRootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
 
 // List of browsers to build for.
 const browsers = ["chrome", "firefox", "safari"];

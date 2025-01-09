@@ -13,7 +13,7 @@ let isRetried = false;
 const patchHwcryptoFunction = (hwc: Hwcrypto) => (fnName: string) => {
   const originalFn = hwc[fnName];
 
-  hwc[fnName] = async function(...args: any[]): Promise<any> {
+  hwc[fnName] = async function(...args: Array<any>): Promise<any> {
     try {
       return await originalFn.apply(this, args);
     } catch (error) {

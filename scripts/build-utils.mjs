@@ -3,11 +3,13 @@ import path from "path";
 
 import fs from "fs-extra"
 import archiver from "archiver";
-import glob from 'glob';
+import { glob } from 'glob';
 
 const isWindows = /^win/.test(process.platform);
 
 export const pkg = JSON.parse(fs.readFileSync("./package.json", 'utf8'));
+
+export const manifestVersion = pkg.version.split("-")[0];
 
 export function rem(...lines) {
   console.log("\n###");
@@ -28,7 +30,7 @@ export function cp(source, destination) {
 export async function rm(globPattern) {
   console.log(`REMOVE ${globPattern}`);
 
-  const files = await findFiles(globPattern);
+  const files = await glob(globPattern);
 
   return await Promise.all(
     files.map((file) => fs.remove(file))
@@ -61,7 +63,7 @@ export function exec(command, args = []) {
 export async function zip(source, destination, date) {
   console.log(`ZIP ${source} → ${destination}`);
 
-  const files = (await findFiles(source + "/**")).filter((location) => fs.lstatSync(location).isFile());
+  const files = (await glob(source + "/**")).filter((location) => fs.lstatSync(location).isFile());
 
   return await new Promise((resolve, reject) => {
     const output  = fs.createWriteStream(path.resolve(destination));
@@ -117,18 +119,6 @@ export function appendToFile(targetFileName, sourceFileName) {
     } catch (error) {
       reject(error);
     }
-  });
-}
-
-export function findFiles(globPattern) {
-  return new Promise((resolve, reject) => {
-    glob(globPattern, (error, matches) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(matches);
-      }
-    });
   });
 }
 

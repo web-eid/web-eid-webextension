@@ -30,7 +30,7 @@ import calculateJsonSize from "../../shared/utils/calculateJsonSize";
 import config from "../../config";
 
 type NativeAppPendingRequest =
-  | { resolve?: (value: any | PromiseLike<any>) => void; reject?: (reason?: any) => void }
+  | { resolve?: (value: PromiseLike<any>) => void; reject?: (reason?: any) => void }
   | null;
 
 export enum NativeAppState {
@@ -64,7 +64,7 @@ export default class NativeAppService {
         browser.runtime.sendNativeMessage(
           "application.id",
           { command: "status" },
-          (response) => resolve(response)
+          (response) => resolve(response),
         );
       });
 
