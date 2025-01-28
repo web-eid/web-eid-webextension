@@ -57,3 +57,28 @@ The Web eID extension for Safari is built as a [Safari web extension](https://de
 Make sure the `NATIVE_APP_NAME` value in `src/config.ts` matches the one in
 the Web-eID native application manifest file.
 
+### Developer tools
+
+The Web eID DevTools tab can be useful while integrating Web eID on a website.
+
+#### Features
+- Event history between the website, extension and native application.
+- Extension's internal log messages.
+- Option to override extension settings, without needing to compile the extension yourself.
+- Option to allow the http://localhost origin when authenticating and signing
+
+#### Enable or disable the Web eID developer tools tab
+
+**Firefox**
+1. Open [Menu -> Settings -> Extensions and themes]  
+   or navigate to the address `about:addons`
+2. Open the Web eID extension details
+3. Open the "Permissions" tab
+4. Toggle "Extend developer tools to access your data in open tabs"
+
+**Chrome**
+1. Open [Settings -> Extensions]  
+   or navigate to the address `chrome://extensions/`
+2. Open the Web eID extension details
+3. Open "Extension options"
+4. Toggle "Enable developer tools"
