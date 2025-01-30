@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Estonian Information System Authority
+ * Copyright (c) 2020-2025 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ import {
   TokenSigningResult,
 } from "../models/TokenSigning/TokenSigningResponse";
 
-import config from "../config";
+import { config } from "../shared/configManager";
 
 /**
  * Helper function to compose a token signing response message
