@@ -47,12 +47,8 @@ function createLogEntryElement(type, time, message, source) {
 
 function stringifyError(error) {
   const {
-    fileName,
-    lineNumber,
-    columnNumber,
     message,
     name,
-    code,
     stack,
   } = error;
 

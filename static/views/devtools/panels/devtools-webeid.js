@@ -24,9 +24,25 @@ import events from "./webeid-events.js";
 import log from "./webeid-log.js";
 import settings from "./webeid-settings.js";
 
-
 const backgroundConnection = chrome.runtime.connect({
   name: "webeid-devtools",
+});
+
+const keepAliveInterval = setInterval(() => {
+  backgroundConnection.postMessage({ devtools: "keep-alive" });
+}, 20000);
+
+backgroundConnection.onDisconnect.addListener(() => {
+  clearInterval(keepAliveInterval);
+
+  log.append({
+    source: "devtools-webeid.js",
+    type: "error",
+    time: new Date().toISOString().match(/T((.)*)Z/)[1],
+    message: [
+      "Web eID DevTools panel disconnected from the extension. Please reopen the browser DevTools to continue."
+    ],
+  });
 });
 
 backgroundConnection.onMessage.addListener((message) => {
