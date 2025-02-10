@@ -1,34 +1,30 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>Web-eID Privacy</title>
-    <link rel="stylesheet" href="./bootstrap.min.css" />
+    <link rel="stylesheet" href="installed.css">
   </head>
   <body>
-    <div class="modal d-block" tabindex="-1" role="dialog">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 id="title" class="modal-title">Web eID Data Protection Terms</h5>
-          </div>
-          <div class="modal-body" id="content">
-            Web eID transmits the following data that personally identifies you to the e-service:
-            <ul>
-              <li>the user`s certificate for authentication or signing;</li>
-              <li>URL of the website origin for authentication.</li>
-            </ul>
-            The transfer of personal data is necessary for the functioning of authentication and digital signing.
-            Transmitted data is not stored.
-            If you do not agree to the transfer of data then we recommend you to remove the Web eID extension.<br />
-            Full details about the personal data we transmit and what we do with it are provided in our
-            <a href="https://addons.mozilla.org/en-US/firefox/addon/web-eid-webextension/privacy/" target="_blank">Data Protection Terms</a>.
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="uninstall">Remove Web eID</button>
-            <button type="button" class="btn btn-primary" id="agree">Accept the terms</button>
-          </div>
-        </div>
+    <div class="modal" tabindex="-1" role="dialog">
+      <h1 id="title" class="title">Web eID Data Protection Terms</h1>
+
+      <div id="content" class="content">
+        Web eID transmits the following data that personally identifies you to the e-service:
+        <ul>
+          <li>the user's certificate for authentication or signing;</li>
+          <li>URL of the website origin for authentication.</li>
+        </ul>
+        The transfer of personal data is necessary for the functioning of authentication and digital signing.
+        Transmitted data is not stored.
+        If you do not agree to the transfer of data then we recommend you to remove the Web eID extension.<br />
+        Full details about the personal data we transmit and what we do with it are provided in our
+        <a href="https://addons.mozilla.org/en-US/firefox/addon/web-eid-webextension/privacy/" target="_blank">Data Protection Terms</a>.
+      </div>
+
+      <div class="footer">
+        <button type="button" class="btn btn-secondary" id="uninstall">Remove Web eID</button>
+        <button type="button" class="btn btn-primary" id="agree">Accept the terms</button>
       </div>
     </div>
     <script src="installed.js"></script>
