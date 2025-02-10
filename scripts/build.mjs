@@ -115,7 +115,6 @@ const targets = {
     );
     await cp("./static/_locales", "./dist/firefox/_locales");
     await cp("./static/views", "./dist/firefox/views");
-    await cp("./node_modules/bootstrap/dist/css/bootstrap.min.css", "./dist/firefox/views/bootstrap.min.css");
 
     rem(
       "Setting up the Firefox manifest"
