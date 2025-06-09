@@ -32,12 +32,21 @@ function setConfigOverride<K extends keyof typeof defaultConfig>(key: K, value: 
   if (value === null) {
     value = defaultConfig[key];
   }
-  
+
   config[key] = value;
+}
+
+function setConfigFromStorage<K extends keyof typeof defaultConfig>(key: K, value: any): void {
+  if (value == null || typeof value !== typeof defaultConfig[key]) {
+    config[key] = defaultConfig[key];
+  } else {
+    config[key] = value;
+  }
 }
 
 export {
   config,
   defaultConfig,
   setConfigOverride,
+  setConfigFromStorage,
 };

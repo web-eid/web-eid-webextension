@@ -20,12 +20,14 @@
  * SOFTWARE.
  */
 
-import { config, defaultConfig, setConfigOverride } from "./configManager";
+import {config, defaultConfig, setConfigFromStorage, setConfigOverride} from "./configManager";
 import { Port } from "../models/Browser/Runtime";
+import Logger from "./Logger";
 
 class DevToolsBridge extends EventTarget {
 
   devToolPorts: Array<Port> = [];
+  logger = new Logger("devToolsBridge.ts");
 
   constructor() {
     super();
@@ -38,6 +40,7 @@ class DevToolsBridge extends EventTarget {
       port.onMessage.addListener((message) => {
         if (message.devtools === "setting-set") {
           setConfigOverride(message.key, message.value);
+          this.saveToStorage(message.key, message.value);
 
           this.send({ devtools: "settings", config, defaultConfig }, { ignore: port });
         }
@@ -47,7 +50,8 @@ class DevToolsBridge extends EventTarget {
         this.devToolPorts = this.devToolPorts.filter((connectedPort) => connectedPort !== port);
       });
 
-      port.postMessage({ devtools: "settings", config, defaultConfig });
+      this.loadConfigFromStorage()
+        .then(() => port.postMessage({ devtools: "settings", config, defaultConfig }));
     });
   }
 
@@ -60,22 +64,54 @@ class DevToolsBridge extends EventTarget {
   async isDevToolsEnabled() {
     const isDevToolsOptional    = Boolean(browser.runtime.getManifest().optional_permissions?.includes("devtools"));
     const hasDevToolsPermission = await browser.permissions.contains({ permissions: ["devtools"] });
-  
+
     if (isDevToolsOptional && hasDevToolsPermission) {
       return true;
     }
-  
-    const isStorageOptional    = Boolean(browser.runtime.getManifest().optional_permissions?.includes("storage"));
-    const hasStoragePermission = await browser.permissions.contains({ permissions: ["storage"] });
-  
-    if (isStorageOptional && hasStoragePermission) {
+
+    const isStorageEnabled = await this.isStorageEnabled();
+    if (isStorageEnabled) {
       const { devtoolsEnabled } = await browser.storage.local.get(["devtoolsEnabled"]);
-  
+
       return Boolean(devtoolsEnabled);
     }
-  
+
     return false;
   }
+
+  private async loadConfigFromStorage(): Promise<void> {
+    const isStorageEnabled = await this.isStorageEnabled();
+    if (isStorageEnabled) {
+      try {
+        const keys = Object.keys(config) as Array<keyof typeof config>;
+        const results = await browser.storage.local.get(keys);
+
+        for (const key of keys) {
+          setConfigFromStorage(key, results[key]);
+        }
+      } catch (error) {
+        await this.logger.error('Failed to load configuration from storage:', error);
+      }
+    }
+  }
+
+  private async saveToStorage<K extends keyof typeof defaultConfig>(key: K, value: typeof defaultConfig[K]) {
+    const isStorageEnabled = await this.isStorageEnabled();
+    if (isStorageEnabled) {
+      if (value === null) {
+        browser.storage.local.remove([key]);
+      } else {
+        browser.storage.local.set({[key]: value});
+      }
+    }
+  }
+
+  private async isStorageEnabled() {
+    const isStorageOptional = Boolean(browser.runtime.getManifest().optional_permissions?.includes("storage"));
+    const hasStoragePermission = await browser.permissions.contains({permissions: ["storage"]});
+    return isStorageOptional && hasStoragePermission;
+  }
+
 }
 
 export default new DevToolsBridge();
