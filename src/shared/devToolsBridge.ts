@@ -20,14 +20,12 @@
  * SOFTWARE.
  */
 
-import {config, defaultConfig, setConfigFromStorage, setConfigOverride} from "./configManager";
+import { config, defaultConfig, setConfigFromStorage, setConfigOverride } from "./configManager";
 import { Port } from "../models/Browser/Runtime";
-import Logger from "./Logger";
 
 class DevToolsBridge extends EventTarget {
 
   devToolPorts: Array<Port> = [];
-  logger = new Logger("devToolsBridge.ts");
 
   constructor() {
     super();
@@ -90,7 +88,7 @@ class DevToolsBridge extends EventTarget {
           setConfigFromStorage(key, results[key]);
         }
       } catch (error) {
-        await this.logger.error('Failed to load configuration from storage:', error);
+        console.error('Failed to load configuration from storage:', error);
       }
     }
   }

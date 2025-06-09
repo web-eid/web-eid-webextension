@@ -138,6 +138,7 @@ export default class NativeAppService {
             url.protocol = "https:";
 
             message.arguments.origin = url.origin;
+            logger.warn("Setting ALLOW_HTTP_LOCALHOST enabled, replaced origin with " + message.arguments.origin);
           }
         }
 
