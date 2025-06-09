@@ -30,6 +30,7 @@ import calculateJsonSize from "../../shared/utils/calculateJsonSize";
 import { config } from "../../shared/configManager";
 
 import Logger from "../../shared/Logger";
+import isLoopbackAddress from "../../shared/utils/isLoopbackAddress";
 
 const logger = new Logger("NativeAppService.ts");
 
@@ -133,7 +134,7 @@ export default class NativeAppService {
         if (config.ALLOW_HTTP_LOCALHOST && message.arguments?.origin) {
           const url = new URL(message.arguments.origin);
 
-          if (url.protocol === "http:" && url.hostname === "localhost") {
+          if (url.protocol === "http:" && isLoopbackAddress(url.hostname)) {
             url.protocol = "https:";
 
             message.arguments.origin = url.origin;
