@@ -22,12 +22,16 @@
       "background.js"
     ]
   },
+  "options_ui": {
+    "page": "views/options.html"
+  },
   "devtools_page": "views/devtools/devtools.html",
   "permissions": [
     "*://*/*",
     "nativeMessaging"
   ],
   "optional_permissions": [
-    "devtools"
+    "devtools",
+    "storage"
   ]
 }
