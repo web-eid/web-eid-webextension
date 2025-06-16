@@ -1,6 +1,5 @@
 {
   "manifest_version": 3,
-  "default_locale": "en",
   "name": "Web eID",
   "description": "Use your electronic identification card for secure authentication and digital signing.",
   "version": "{{package.version}}",
