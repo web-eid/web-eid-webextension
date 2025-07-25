@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Estonian Information System Authority
+ * Copyright (c) 2020-2025 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +31,8 @@ import authenticate from "./actions/authenticate";
 import getSigningCertificate from "./actions/getSigningCertificate";
 import sign from "./actions/sign";
 import status from "./actions/status";
+
+import Logger from "../shared/Logger";
 
 async function onAction(message: ExtensionRequest, sender: MessageSender): Promise<void | object> {
   switch (message.action) {
@@ -66,6 +68,7 @@ async function onAction(message: ExtensionRequest, sender: MessageSender): Promi
 
     case Action.STATUS:
       return await status(
+        sender,
         message.libraryVersion,
       );
   }
@@ -77,12 +80,14 @@ async function onTokenSigningAction(message: TokenSigningMessage, sender: Messag
   switch (message.type) {
     case "VERSION": {
       return await TokenSigningAction.status(
+        sender,
         message.nonce,
       );
     }
 
     case "CERT": {
       return await TokenSigningAction.getCertificate(
+        sender,
         message.nonce,
         sender.url,
         message.lang,
@@ -92,6 +97,7 @@ async function onTokenSigningAction(message: TokenSigningMessage, sender: Messag
 
     case "SIGN": {
       return await TokenSigningAction.sign(
+        sender,
         message.nonce,
         sender.url,
         message.cert,
@@ -104,10 +110,35 @@ async function onTokenSigningAction(message: TokenSigningMessage, sender: Messag
 }
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const logger = new Logger("background.ts");
+
+  logger.tabId = sender.tab?.id;
+  
   if ((message as ExtensionRequest).action) {
-    onAction(message, sender).then(sendResponse);
+    logger.devToolsEvent("request", "Extension (content)", "Extension (background)", message);
+
+    onAction(message, sender)
+      .then((response) => {
+        logger.devToolsEvent("response", "Extension (content)", "Extension (background)", response);
+
+        return response;
+      })
+      .then(sendResponse);
+
+  } else if (message.devtools) {
+    logger.devToolsProxy(message, sender);
+    sendResponse();
   } else if ((message as TokenSigningMessage).type) {
-    onTokenSigningAction(message, sender).then(sendResponse);
+    logger.devToolsEvent("request", "Extension (content)", "Extension (background)", message);
+
+    onTokenSigningAction(message, sender)
+      .then((response) => {
+        logger.devToolsEvent("response", "Extension (content)", "Extension (background)", response);
+
+        return response;
+      })
+      .then(sendResponse);
   }
+
   return true;
 });

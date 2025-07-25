@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Estonian Information System Authority
+ * Copyright (c) 2020-2025 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,12 @@ import libraryConfig from "@web-eid.js/config";
 import { NativeRequest } from "@web-eid.js/models/message/NativeRequest";
 import { Port } from "../../models/Browser/Runtime";
 import calculateJsonSize from "../../shared/utils/calculateJsonSize";
-import config from "../../config";
+import { config } from "../../shared/configManager";
+
+import Logger from "../../shared/Logger";
+import isLoopbackAddress from "../../shared/utils/isLoopbackAddress";
+
+const logger = new Logger("NativeAppService.ts");
 
 export enum NativeAppState {
   UNINITIALIZED,
@@ -41,7 +46,13 @@ export default class NativeAppService {
 
   private port: Port | null = null;
 
+  constructor(tabId?: number) {
+    logger.tabId = tabId;
+  }
+
   async connect(): Promise<{ version: string }> {
+    logger.log("Connecting to the native application " + config.NATIVE_APP_NAME);
+
     this.state = NativeAppState.CONNECTING;
     this.port  = browser.runtime.connectNative(config.NATIVE_APP_NAME);
 
@@ -58,6 +69,8 @@ export default class NativeAppService {
       if (message.version) {
         this.state = NativeAppState.CONNECTED;
 
+        logger.info("Connected to the native application");
+
         return message;
       }
 
@@ -72,7 +85,7 @@ export default class NativeAppService {
       }
     } catch (error) {
       if (this.port.error) {
-        console.error(this.port.error);
+        logger.error(this.port.error);
       }
 
       if (error instanceof Error) {
@@ -86,7 +99,7 @@ export default class NativeAppService {
   }
 
   disconnectListener(): void {
-    config.DEBUG && console.log("Native app disconnected.");
+    logger.log("Native app disconnected.");
 
     // Accessing lastError when it exists stops chrome from throwing it unnecessarily.
     chrome?.runtime?.lastError;
@@ -95,36 +108,55 @@ export default class NativeAppService {
   }
 
   close(): void {
-    if (this.state == NativeAppState.DISCONNECTED) return;
+    logger.log("Closing connection to native application");
+
+    if (this.state == NativeAppState.DISCONNECTED) {
+      logger.info("Connection already closed");
+
+      return;
+    }
 
     this.state = NativeAppState.DISCONNECTED;
     this.port?.disconnect();
-
-    config.DEBUG && console.log("Native app port closed by extension.");
   }
 
   async send<T>(message: NativeRequest, timeout: number, throwAfterTimeout: Error): Promise<T> {
     switch (this.state) {
       case NativeAppState.CONNECTED: {
-        config.DEBUG && console.log("Sending message to native app", JSON.stringify(message));
-
         const messageSize = calculateJsonSize(message);
+
+        logger.debug("Calculated message size", messageSize);
 
         if (messageSize > config.NATIVE_MESSAGE_MAX_BYTES) {
           throw new Error(`native application message exceeded ${config.NATIVE_MESSAGE_MAX_BYTES} bytes`);
         }
+
+        if (config.ALLOW_HTTP_LOCALHOST && message.arguments?.origin) {
+          const url = new URL(message.arguments.origin);
+
+          if (url.protocol === "http:" && isLoopbackAddress(url.hostname)) {
+            url.protocol = "https:";
+
+            message.arguments.origin = url.origin;
+            logger.warn("Setting ALLOW_HTTP_LOCALHOST enabled, replaced origin with " + message.arguments.origin);
+          }
+        }
+
+        logger.log("Sending message to native application");
+        logger.devToolsEvent("request", "Extension (background)", "Native app", message);
 
         this.port?.postMessage(message);
 
         try {
           const response = await this.nextMessage(timeout, throwAfterTimeout);
 
+          logger.log("Response from native application");
+          logger.devToolsEvent("response", "Extension (background)", "Native app", response);
+
           this.close();
 
           return response;
         } catch (error) {
-          console.error(error);
-
           this.close();
 
           throw error;
@@ -173,9 +205,7 @@ export default class NativeAppService {
 
       const onDisconnectListener = (): void => {
         cleanup?.();
-        reject(new NativeUnavailableError(
-          "a message from native application was expected, but native application closed connection"
-        ));
+        reject(new NativeUnavailableError("connection to the native app was closed"));
       };
 
       cleanup = (): void => {
