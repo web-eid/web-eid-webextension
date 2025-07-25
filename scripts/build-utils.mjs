@@ -47,7 +47,8 @@ export function exec(command, args = []) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: '.',
-      stdio: 'inherit'
+      stdio: 'inherit',
+      ...isWindows && { shell: true },
     });
 
     child.on("close", (code) => {
