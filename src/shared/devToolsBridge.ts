@@ -20,8 +20,9 @@
  * SOFTWARE.
  */
 
-import { config, defaultConfig, setConfigFromStorage, setConfigOverride } from "./configManager";
+import { config, defaultConfig, loadConfigFromStorage, setConfigOverride } from "./configManager";
 import { Port } from "../models/Browser/Runtime";
+import isBrowserStorageEnabled from "./utils/isBrowserStorageEnabled";
 
 class DevToolsBridge extends EventTarget {
 
@@ -30,15 +31,14 @@ class DevToolsBridge extends EventTarget {
   constructor() {
     super();
 
-    browser.runtime.onConnect.addListener((port: Port) => {
+    browser.runtime.onConnect.addListener(async (port: Port) => {
       if (port.name === "webeid-devtools") {
         this.devToolPorts.push(port);
       }
 
-      port.onMessage.addListener((message) => {
+      port.onMessage.addListener(async (message) => {
         if (message.devtools === "setting-set") {
-          setConfigOverride(message.key, message.value);
-          this.saveToStorage(message.key, message.value);
+          await setConfigOverride(message.key, message.value);
 
           this.send({ devtools: "settings", config, defaultConfig }, { ignore: port });
         }
@@ -48,8 +48,8 @@ class DevToolsBridge extends EventTarget {
         this.devToolPorts = this.devToolPorts.filter((connectedPort) => connectedPort !== port);
       });
 
-      this.loadConfigFromStorage()
-        .then(() => port.postMessage({ devtools: "settings", config, defaultConfig }));
+      await loadConfigFromStorage();
+      port.postMessage({ devtools: "settings", config, defaultConfig });
     });
   }
 
@@ -67,7 +67,7 @@ class DevToolsBridge extends EventTarget {
       return true;
     }
 
-    const isStorageEnabled = await this.isStorageEnabled();
+    const isStorageEnabled = await isBrowserStorageEnabled();
     if (isStorageEnabled) {
       const { devtoolsEnabled } = await browser.storage.local.get(["devtoolsEnabled"]);
 
@@ -75,39 +75,6 @@ class DevToolsBridge extends EventTarget {
     }
 
     return false;
-  }
-
-  private async loadConfigFromStorage(): Promise<void> {
-    const isStorageEnabled = await this.isStorageEnabled();
-    if (isStorageEnabled) {
-      try {
-        const keys = Object.keys(config) as Array<keyof typeof config>;
-        const results = await browser.storage.local.get(keys);
-
-        for (const key of keys) {
-          setConfigFromStorage(key, results[key]);
-        }
-      } catch (error) {
-        console.error('Failed to load configuration from storage:', error);
-      }
-    }
-  }
-
-  private async saveToStorage<K extends keyof typeof defaultConfig>(key: K, value: typeof defaultConfig[K]) {
-    const isStorageEnabled = await this.isStorageEnabled();
-    if (isStorageEnabled) {
-      if (value === null) {
-        browser.storage.local.remove([key]);
-      } else {
-        browser.storage.local.set({[key]: value});
-      }
-    }
-  }
-
-  private async isStorageEnabled() {
-    const isStorageOptional = Boolean(browser.runtime.getManifest().optional_permissions?.includes("storage"));
-    const hasStoragePermission = await browser.permissions.contains({permissions: ["storage"]});
-    return isStorageOptional && hasStoragePermission;
   }
 
 }

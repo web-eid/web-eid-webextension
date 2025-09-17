@@ -56,5 +56,5 @@ export default Object.freeze({
    * 
    * When this option is enabled, the extension reports localhost URLs to the native application with HTTPS.
    */
-  ALLOW_HTTP_LOCALHOST: false,
+  ALLOW_HTTP_LOCALHOST: false as boolean,
 });

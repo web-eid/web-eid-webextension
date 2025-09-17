@@ -22,7 +22,8 @@
 
 const excludedSettings = [
   "NATIVE_APP_NAME",
-  "TOKEN_SIGNING_BACKWARDS_COMPATIBILITY",
+  "VERSION",
+  "TOKEN_SIGNING_BACKWARDS_COMPATIBILITY"
 ];
 
 const ui = {
@@ -33,7 +34,7 @@ const ui = {
 export default {
   render(config, defaultConfig, backgroundConnection) {
     Object.assign(this, { config, defaultConfig, backgroundConnection });
-    
+
     const configRows = (
       Object
         .entries(config)
@@ -104,13 +105,13 @@ export default {
         input.value = value;
         break;
       }
-  
+
       case "boolean": {
         input.type = "checkbox";
         input.checked = value;
         break;
       }
-    
+
       default:
         input.type  = "text";
         input.value = value;
