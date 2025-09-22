@@ -9,16 +9,16 @@
   --color-background-primary: #ffffff;
   --color-background-secondary: #f3f3f3;
   --color-background-tertiary: #eaeaea;
-  --color-border: #E8E8E8;
-  
+  --color-border: #e8e8e8;
+
   --color-tab-background: var(--color-background-secondary);
   --color-tab-background-hover: var(--color-background-secondary);
   --color-tab-inactive: transparent;
-  --color-tab-active: #1155CC;
-  
-  --color-button-border: #D3D3D3;
+  --color-tab-active: #1155cc;
 
-  --color-input-invalid: #FF000050;
+  --color-button-border: #d3d3d3;
+
+  --color-input-invalid: #ff000050;
   --color-input-border: #31313199;
 
   --color-event-border-active: color-mix(in srgb, var(--color-tab-active) 50%, var(--color-background-primary));
@@ -53,13 +53,13 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --event-highlight-strength: 10%;
-    --color-text-primary: #E7E7E7;
-    --color-text-note: #CECECE99;
+    --color-text-primary: #e7e7e7;
+    --color-text-note: #cecece99;
     --color-background-primary: #334;
     --color-background-secondary: #445;
     --color-background-tertiary: #556;
     --color-border: #171717;
-    --color-button-border: #2C2C2C;
-    --color-version: #AAA;
+    --color-button-border: #5a5a5a;
+    --color-version: #aaa;
   }
 }

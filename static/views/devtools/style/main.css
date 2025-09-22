@@ -26,12 +26,16 @@ input[type="button"] {
   color: var(--color-text-primary);
   background-color: var(--color-background-primary);
 
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: var(--color-background-secondary);
   }
 
-  &:active {
+  &:active:not(:disabled) {
     background-color: var(--color-background-tertiary);
+  }
+
+  &:disabled {
+    color: var(--color-button-border);
   }
 }
 
@@ -58,24 +62,24 @@ header {
 
   nav {
     font-size: var(--font-size);
-  
+
     flex: 0 0 auto;
     display: flex;
- 
+
     input {
       display: none;
     }
-  
+
     label {
       line-height: 2rem;
       padding: 0 var(--spacing-m);
-      
+
       background-color: var(--color-background-secondary);
       border-bottom: 0.125rem solid var(--color-tab-inactive);
       transition: border-bottom-color var(--transition-duration) ease;
     }
-  
-    input:checked+label {
+
+    input:checked + label {
       border-bottom: 2px solid var(--color-tab-active);
     }
   }
@@ -90,10 +94,15 @@ header {
   }
 }
 
-
-body:not(:has([data-nav="events"]:checked))   [data-page="events"]   { display: none; }
-body:not(:has([data-nav="log"]:checked))      [data-page="log"]      { display: none; }
-body:not(:has([data-nav="settings"]:checked)) [data-page="settings"] { display: none; }
+body:not(:has([data-nav="events"]:checked)) [data-page="events"] {
+  display: none;
+}
+body:not(:has([data-nav="log"]:checked)) [data-page="log"] {
+  display: none;
+}
+body:not(:has([data-nav="settings"]:checked)) [data-page="settings"] {
+  display: none;
+}
 
 main {
   position: relative;
@@ -104,15 +113,15 @@ main {
 
   section {
     height: 100%;
-  
+
     border: 1px solid var(--color-border);
   }
 }
 
 .toolbar {
-  display:flex;
+  display: flex;
   padding: var(--spacing-s) var(--spacing-m);
-  
+
   border: 1px solid var(--color-border);
   background-color: var(--color-background-tertiary);
 
