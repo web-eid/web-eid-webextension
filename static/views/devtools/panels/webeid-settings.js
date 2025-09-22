@@ -20,10 +20,11 @@
  * SOFTWARE.
  */
 
-const excludedSettings = [
-  "NATIVE_APP_NAME",
-  "VERSION",
-  "TOKEN_SIGNING_BACKWARDS_COMPATIBILITY"
+const includedSettings = [
+  "NATIVE_MESSAGE_MAX_BYTES",
+  "NATIVE_GRACEFUL_DISCONNECT_TIMEOUT",
+  "TOKEN_SIGNING_USER_INTERACTION_TIMEOUT",
+  "ALLOW_HTTP_LOCALHOST"
 ];
 
 const ui = {
@@ -46,7 +47,7 @@ export default {
   },
 
   isVisible(settingKey) {
-    return !excludedSettings.includes(settingKey);
+    return includedSettings.includes(settingKey);
   },
 
   createSettingRow(key, value) {
