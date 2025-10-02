@@ -24,6 +24,7 @@ import { serializeError } from "@web-eid.js/utils/errorSerializer";
 
 import { MessageSender } from "../models/Browser/Runtime";
 import devToolsBridge from "./devToolsBridge";
+import isBrowserStorageEnabled from "./utils/isBrowserStorageEnabled";
 
 type Layer = "Website" | "Extension (content)" | "Extension (background)" | "Native app";
 
@@ -43,20 +44,6 @@ interface DevToolsEventMessage {
   data: any;
   time: string;
 }
-
-/*
-let devtoolPorts: Array<Port> = [];
-
-browser.runtime.onConnect.addListener((port) => {
-  if (port.name === "webeid-devtools") {
-    devtoolPorts.push(port);
-  }
-
-  port.onDisconnect.addListener(() => {
-    devtoolPorts = devtoolPorts.filter((devtoolsPort) => devtoolsPort != port);
-  });
-});
-*/
 
 export default class Logger {
   private module: string;
@@ -94,12 +81,26 @@ export default class Logger {
     console.debug(...args);
   }
 
-  async isDevtoolsAvailable(): Promise<boolean> {
-    return (await browser?.permissions?.contains({ "permissions": ["devtools"] })) ?? false;
+  async isDevToolsEnabled(): Promise<boolean> {
+    const isOptionalPermissionDevToolsTurnedOn = Boolean(browser.runtime.getManifest().optional_permissions?.includes("devtools"));
+
+    if (isOptionalPermissionDevToolsTurnedOn) {
+      return true;
+    }
+
+    const isStorageEnabled = await isBrowserStorageEnabled();
+
+    if (isStorageEnabled) {
+      const { devtoolsEnabled } = await browser.storage.local.get(["devtoolsEnabled"]);
+
+      return Boolean(devtoolsEnabled);
+    }
+
+    return false;
   }
 
   async devToolsLog(type: "event" | "log" | "info" | "warn" | "error" | "debug", rawMessage: Array<any>) {
-    if (this.isContentScript || await this.isDevtoolsAvailable()) {
+    if (this.isContentScript || await this.isDevToolsEnabled()) {
       const time   = this.getCurrentTime();
       const source = this.module;
 
@@ -129,7 +130,7 @@ export default class Logger {
   }
 
   async devToolsEvent(type: "request" | "response", layer1: Layer, layer2: Layer, data: any) {
-    if (this.isContentScript || await this.isDevtoolsAvailable()) {
+    if (this.isContentScript || await this.isDevToolsEnabled()) {
       const time = this.getCurrentTime();
 
       const devToolsEventMessage: DevToolsEventMessage = {
@@ -159,7 +160,7 @@ export default class Logger {
 
       devToolsBridge.send({
         tabId: sender.tab?.id,
-        
+
         devtools,
         source,
         type,
@@ -171,13 +172,13 @@ export default class Logger {
 
       devToolsBridge.send({
         tabId: sender.tab?.id,
-        
+
         devtools,
         type,
         data,
         layer1,
         layer2,
-        time 
+        time
       });
     }
   }
