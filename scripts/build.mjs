@@ -115,6 +115,7 @@ const targets = {
     );
     await cp("./static/_locales", "./dist/firefox/_locales");
     await cp("./static/views", "./dist/firefox/views");
+    await rm("./dist/firefox/views/options.*");
     await cp("./node_modules/webextension-polyfill/dist/browser-polyfill.min.js", "./dist/firefox/views/browser-polyfill.min.js");
 
     rem(
