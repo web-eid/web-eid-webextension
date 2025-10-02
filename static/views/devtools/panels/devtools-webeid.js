@@ -46,7 +46,7 @@ backgroundConnection.onDisconnect.addListener(() => {
 });
 
 backgroundConnection.onMessage.addListener((message) => {
-  if (!message.tabId || message.tabId === browser.devtools.inspectedWindow.tabId) {
+  if (!message.tabId || message.tabId === browser.devtools.inspectedWindow.tabId || browser.devtools.inspectedWindow.tabId === -1) {
     if (message.devtools === "log") {
       log.append(message);
 

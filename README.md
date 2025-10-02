@@ -82,3 +82,8 @@ The Web eID DevTools tab can be useful while integrating Web eID on a website.
 2. Open the Web eID extension details
 3. Open "Extension options"
 4. Toggle "Enable developer tools"
+
+**Safari**
+1. Open [Settings -> Extensions]
+2. Open the Web eID Settings
+3. Toggle "Enable developer tools"
