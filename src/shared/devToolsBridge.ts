@@ -32,24 +32,7 @@ class DevToolsBridge extends EventTarget {
     super();
 
     browser.runtime.onConnect.addListener(async (port: Port) => {
-      if (port.name === "webeid-devtools") {
-        this.devToolPorts.push(port);
-      }
-
-      port.onMessage.addListener(async (message) => {
-        if (message.devtools === "setting-set") {
-          await setConfigOverride(message.key, message.value);
-
-          this.send({ devtools: "settings", config, defaultConfig }, { ignore: port });
-        }
-      });
-
-      port.onDisconnect.addListener(() => {
-        this.devToolPorts = this.devToolPorts.filter((connectedPort) => connectedPort !== port);
-      });
-
-      await loadConfigFromStorage();
-      port.postMessage({ devtools: "settings", config, defaultConfig });
+      await this.connectToPort(port);
     });
   }
 
@@ -59,22 +42,25 @@ class DevToolsBridge extends EventTarget {
       .forEach((port) => port.postMessage(message));
   }
 
-  async isDevToolsEnabled() {
-    const isDevToolsOptional    = Boolean(browser.runtime.getManifest().optional_permissions?.includes("devtools"));
-    const hasDevToolsPermission = await browser.permissions.contains({ permissions: ["devtools"] });
-
-    if (isDevToolsOptional && hasDevToolsPermission) {
-      return true;
+  private async connectToPort(port: Port) {
+    if (port.name === "webeid-devtools") {
+      this.devToolPorts.push(port);
     }
 
-    const isStorageEnabled = await isBrowserStorageEnabled();
-    if (isStorageEnabled) {
-      const { devtoolsEnabled } = await browser.storage.local.get(["devtoolsEnabled"]);
+    port.onMessage.addListener((message) => {
+      if (message.devtools === "setting-set") {
+        setConfigOverride(message.key, message.value);
 
-      return Boolean(devtoolsEnabled);
-    }
+        this.send({ devtools: "settings", config, defaultConfig }, { ignore: port });
+      }
+    });
 
-    return false;
+    port.onDisconnect.addListener(() => {
+      this.devToolPorts = this.devToolPorts.filter((connectedPort) => connectedPort !== port);
+    });
+
+    await loadConfigFromStorage();
+    port.postMessage({ devtools: "settings", config, defaultConfig });
   }
 
 }

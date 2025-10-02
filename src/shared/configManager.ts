@@ -48,11 +48,11 @@ async function loadConfigFromStorage() {
   const isStorageEnabled = await isBrowserStorageEnabled();
   if (isStorageEnabled) {
     try {
-      const results = await browser.storage.local.get(overrideableConfigKeys);
+      const values = await browser.storage.local.get(overrideableConfigKeys);
 
       for (const key of overrideableConfigKeys) {
-        if (isValidConfigValue(key, results[key])) {
-          setConfigValueOrResetToDefaultOnNull(key, results[key]);
+        if (isValidConfigValue(key, values[key])) {
+          setConfigValueOrResetToDefaultOnNull(key, values[key]);
         }
       }
     } catch (error) {
