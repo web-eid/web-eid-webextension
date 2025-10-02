@@ -21,9 +21,9 @@
  */
 
 async function isDevToolsEnabled() {
-  const isDevToolsOptional = Boolean(browser.runtime.getManifest().optional_permissions?.includes("devtools"));
+  const isOptionalPermissionDevToolsTurnedOn = Boolean(browser.runtime.getManifest().optional_permissions?.includes("devtools"));
 
-  if (isDevToolsOptional) {
+  if (isOptionalPermissionDevToolsTurnedOn) {
     return true;
   }
 

@@ -24,7 +24,7 @@ import events from "./webeid-events.js";
 import log from "./webeid-log.js";
 import settings from "./webeid-settings.js";
 
-const backgroundConnection = chrome.runtime.connect({
+const backgroundConnection = browser.runtime.connect({
   name: "webeid-devtools",
 });
 
@@ -46,9 +46,10 @@ backgroundConnection.onDisconnect.addListener(() => {
 });
 
 backgroundConnection.onMessage.addListener((message) => {
-  if (!message.tabId || message.tabId === chrome.devtools.inspectedWindow.tabId) {
+  if (!message.tabId || message.tabId === browser.devtools.inspectedWindow.tabId) {
     if (message.devtools === "log") {
       log.append(message);
+
     } else if (message.devtools === "event") {
       events.append(message);
 
