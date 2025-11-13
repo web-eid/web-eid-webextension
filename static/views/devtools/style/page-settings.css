@@ -1,0 +1,36 @@
+section[data-page="settings"] {
+  overflow: auto;
+
+  .warning {
+    padding: var(--spacing-s);
+    background-color: color-mix(in srgb, var(--color-log-level-warn) 5%, transparent);
+  }
+
+  table {
+    width: 100%;
+
+    tr:first-child {
+      td, th {
+        border-top: 1px solid var(--color-border);
+      }
+    }
+
+    td, th {
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--spacing-xs) var(--spacing-s);
+    }
+
+    th {
+      width: 1px;
+      text-align: left;
+    }
+
+    td:last-child {
+      text-align: right;
+    }
+  }
+
+  input:invalid {
+    background-color: var(--color-input-invalid);
+  }
+}

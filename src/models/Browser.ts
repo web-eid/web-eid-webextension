@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Estonian Information System Authority
+ * Copyright (c) 2020-2025 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,7 @@
  * SOFTWARE.
  */
 
+import Devtools from "./Browser/Devtools";
 import Permissions from "./Browser/Permissions";
 import Runtime from "./Browser/Runtime";
 import Tabs from "./Browser/Tabs";
@@ -57,4 +58,16 @@ export default interface Browser {
    * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs
    */
   tabs: Tabs;
+
+  /**
+   * Enables extensions to interact with the browser's Developer Tools.
+   * 
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/devtools
+   */
+  devtools: Devtools;
+
+  /**
+   * 
+   */
+  storage: Storage;
 }

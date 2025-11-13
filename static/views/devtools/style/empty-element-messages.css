@@ -1,0 +1,7 @@
+section[data-page="events"] #event-details:empty::before {
+  content: 'Select an event to inspect.';
+}
+
+section[data-page="events"] #event-list:empty::before {
+  content: 'The Web eID library has not sent any messages yet.';
+}

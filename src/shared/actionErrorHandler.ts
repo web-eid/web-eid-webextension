@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Estonian Information System Authority
+ * Copyright (c) 2020-2025 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ import VersionMismatchError from "@web-eid.js/errors/VersionMismatchError";
 import { serializeError } from "@web-eid.js/utils/errorSerializer";
 
 import checkCompatibility from "./utils/checkCompatibility";
-import config from "../config";
+import { config } from "../shared/configManager";
 
 export default function actionErrorHandler(
   action:

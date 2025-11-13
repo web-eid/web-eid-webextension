@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Estonian Information System Authority
+ * Copyright (c) 2020-2025 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,29 +22,12 @@
 
 export default interface Runtime {
   /**
-   * Fired when the extension is first installed, when the extension is updated to a new version, and when the browser is
-   * updated to a new version.
-   *
-   * Note that runtime.onInstalled is not the same as management.onInstalled. The runtime.onInstalled event is fired only
-   * for your extension. The browser.management.onInstalled event is fired for any extensions.
-   *
-   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onInstalled
-   */
-  onInstalled: {
-    addListener: (callback: OnInstalledCallback) => void;
-  };
-
-  /**
    * A string representing the extension ID.
    *
    * If the extension specifies an ID in its browser_specific_settings manifest.json key, runtime.id contains that value.
    * Otherwise, runtime.id  contains the ID that was generated for the extension.
    */
   id: string;
-
-  onMessage: {
-    addListener: (callback: OnMessageCallback) => void;
-  };
 
   /**
    * Sends a single message from an extension to a native application.
@@ -120,6 +103,38 @@ export default interface Runtime {
    * Get the complete manifest.json file, deserialized from JSON to an object.
    */
   getManifest: () => any;
+
+  /**
+   * Fired when a connection is made with either an extension process or a content script.
+   * 
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onConnect
+   */
+  onConnect: {
+    addListener:    (listener: (port: Port) => void) => void;
+    removeListener: (listener: () => void) => void;
+  };
+
+  /**
+   * Fired when the extension is first installed, when the extension is updated to a new version,
+   * and when the browser is updated to a new version.
+   *
+   * Note that runtime.onInstalled is not the same as management.onInstalled. The runtime.onInstalled event is
+   * fired only for your extension. The browser.management.onInstalled event is fired for any extensions.
+   *
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onInstalled
+   */
+  onInstalled: {
+    addListener: (callback: OnInstalledCallback) => void;
+  };
+
+  /**
+   * Use this event to listen for messages from another part of your extension.
+   * 
+   * @see https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
+   */
+  onMessage: {
+    addListener: (callback: OnMessageCallback) => void;
+  };
 }
 
 export interface Port {
