@@ -34,12 +34,20 @@ export default function injectPageScript(): void {
  * The page script can be found here:
  *   https://github.com/open-eid/chrome-token-signing/blob/master/extension/page.js
  */
+  if (document.contentType !== "text/html") {
+    return;
+  }
   if (!document.querySelector("script[data-name='TokenSigning']")) {
     const s = document.createElement("script");
 
     s.type = "text/javascript";
-    s.dataset.name = "TokenSigning";
-    s.dataset.by = "Web-eID extension";
+    if (s.dataset) {
+      s.dataset.name = "TokenSigning";
+      s.dataset.by = "Web-eID extension";
+    } else {
+      s.setAttribute("data-name", "TokenSigning");
+      s.setAttribute("data-by", "Web-eID extension");
+    }
 
     if (browser.runtime.getManifest()["manifest_version"] >= 3) {
       s.src = browser.runtime.getURL("token-signing-page-script.js");
