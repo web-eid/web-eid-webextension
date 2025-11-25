@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Estonian Information System Authority
+ * Copyright (c) 2020-2025 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,10 +32,29 @@ export default Object.freeze({
    */
   NATIVE_GRACEFUL_DISCONNECT_TIMEOUT: 2000, // 2 seconds
 
-  // Default: false
+  /**
+   * Web eID is able to provide Chrome Token Signing backwards compatibility.
+   * When enabled, in addition to the Web eID library, the Web eID browser extension will process hwcrypto.js events.
+   *
+   * In this mode, Web-eID will need to inject the Token Signing page script to websites.
+   *
+   * This is a temporary solution. Web eID library should be used instead of hwcrypto.js.
+   * 
+   * Disabled by default.
+   * 
+   * @see https://github.com/open-eid/chrome-token-signing
+   * @see https://github.com/hwcrypto/hwcrypto.js/wiki
+   */
   TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY?.toUpperCase() === "TRUE",
   TOKEN_SIGNING_USER_INTERACTION_TIMEOUT: 1000 * 60 * 5, // 5 minutes
 
-  // Default: false
-  DEBUG: process.env.DEBUG?.toUpperCase() === "TRUE",
+  /**
+   * Should the Web eID extension allow http://localhost.
+   * 
+   * The extension checks if the browser context is secure and the native application checks for the HTTPS protocol.
+   * Localhost is considered to be secure context, even when HTTPS is not used.
+   * 
+   * When this option is enabled, the extension reports localhost URLs to the native application with HTTPS.
+   */
+  ALLOW_HTTP_LOCALHOST: false as boolean,
 });

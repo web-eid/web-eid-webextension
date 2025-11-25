@@ -8,13 +8,10 @@ import license from "rollup-plugin-license";
 import polyfill from "rollup-plugin-polyfill";
 import resolve from "@rollup/plugin-node-resolve";
 
-const projectRootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
-
 // List of browsers to build for.
 const browsers = ["chrome", "firefox", "safari"];
 
 const processEnvConf = {
-  DEBUG:                                 process.env.DEBUG,
   TOKEN_SIGNING_BACKWARDS_COMPATIBILITY: process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY,
 }
 
@@ -22,7 +19,7 @@ const pluginsConf = (environment) => [
   alias({
     entries: [{
       find:        "@web-eid.js",
-      replacement: path.resolve(projectRootDir, "dist/lib/web-eid.js/src"),
+      replacement: path.resolve(import.meta.dirname, "dist/lib/web-eid.js/src"),
     }],
   }),
   resolve({ rootDir: "./dist" }),
@@ -30,7 +27,7 @@ const pluginsConf = (environment) => [
   license({
     banner: {
       content: {
-        file:     path.join(projectRootDir, "LICENSE"),
+        file:     path.join(import.meta.dirname, "LICENSE"),
         encoding: "utf-8",
       },
     },

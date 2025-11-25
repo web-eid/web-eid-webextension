@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Estonian Information System Authority
+ * Copyright (c) 2020-2025 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,9 +34,11 @@ import UserTimeoutError from "@web-eid.js/errors/UserTimeoutError";
 import { MessageSender } from "../../models/Browser/Runtime";
 import NativeAppService from "../services/NativeAppService";
 import actionErrorHandler from "../../shared/actionErrorHandler";
-import config from "../../config";
 import { getSenderUrl } from "../../shared/utils/sender";
 
+import Logger from "../../shared/Logger";
+
+const logger = new Logger("sign.ts");
 
 export default async function sign(
   certificate: string,
@@ -47,14 +49,16 @@ export default async function sign(
   userInteractionTimeout: number,
   lang?: string,
 ): Promise<ExtensionSignResponse | ExtensionFailureResponse> {
+  logger.tabId = sender.tab?.id;
+
+  logger.log("Signing requested");
+
   let nativeAppService: NativeAppService | undefined;
   let nativeAppStatus: { version: string } | undefined;
 
   try {
-    nativeAppService = new NativeAppService();
+    nativeAppService = new NativeAppService(sender.tab?.id);
     nativeAppStatus  = await nativeAppService.connect();
-
-    config.DEBUG && console.log("Sign: connected to native", nativeAppStatus);
 
     const message: NativeSignRequest = {
       command: "sign",
@@ -84,12 +88,17 @@ export default async function sign(
     );
 
     if (isResponseValid) {
+      logger.info("Returning success response");
+
       return { action: Action.SIGN_SUCCESS, ...response };
     } else {
+      logger.info("Signing response is invalid");
+
       throw new UnknownError("unexpected response from native application");
     }
   } catch (error) {
-    console.error("Sign:", error);
+    logger.info("Signing failed");
+    logger.error(error);
 
     return actionErrorHandler(Action.SIGN_FAILURE, error, libraryVersion, nativeAppStatus?.version);
   } finally {
