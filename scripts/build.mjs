@@ -37,7 +37,7 @@ const targets = {
   },
 
   async bundle() {
-    if (pkg.version == manifestVersion) {
+    if (pkg.version === manifestVersion) {
       rem(
         `Build version: ${pkg.version}`
       );
