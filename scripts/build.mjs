@@ -63,7 +63,6 @@ const targets = {
       "Preparing the Firefox dist directory"
     );
     await cp("./dist/src", "./dist/firefox");
-    await appendToFile("./dist/firefox/background/background.js", "./dist/firefox/background-firefox/consent.js");
 
     rem(
       "Preparing the Safari dist directory"
@@ -113,12 +112,6 @@ const targets = {
     await cp("./static/icons", "./dist/chrome/icons");
     await cp("./static/icons", "./dist/firefox/icons");
     await cp("./static/icons", "./dist/safari");
-
-    rem(
-      "Copying static consent pages to Firefox dist directory"
-    );
-    await cp("./static/_locales", "./dist/firefox/_locales");
-    await cp("./static/views", "./dist/firefox/views");
 
     rem(
       "Setting up the Firefox manifest"
