@@ -37,7 +37,7 @@ const targets = {
   },
 
   async bundle() {
-    if (pkg.version == manifestVersion) {
+    if (pkg.version === manifestVersion) {
       rem(
         `Build version: ${pkg.version}`
       );
@@ -79,6 +79,10 @@ const targets = {
   },
 
   async build() {
+    rem(
+      "Environment variables affecting the build:",
+      `TOKEN_SIGNING_BACKWARDS_COMPATIBILITY=${process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY?.toUpperCase() === "TRUE"} (hwcrypto support enabled)`
+    );
     await this.compile();
 
     await this.bundle();
