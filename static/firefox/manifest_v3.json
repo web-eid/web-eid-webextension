@@ -3,10 +3,12 @@
   "name": "Web eID",
   "version": "{{package.version}}",
   "description": "Use your electronic identification card for secure authentication and digital signing.",
-  "default_locale": "en",
   "browser_specific_settings": {
     "gecko": {
-      "id": "{e68418bc-f2b0-4459-a9ea-3e72b6751b07}"
+      "id": "{e68418bc-f2b0-4459-a9ea-3e72b6751b07}",
+      "data_collection_permissions": {
+        "required": []
+      }
     }
   },
   "icons": {
