@@ -47,7 +47,9 @@ export default async function authenticate(
     nativeAppService = new NativeAppService();
     nativeAppStatus  = await nativeAppService.connect();
 
-    config.DEBUG && console.log("Authenticate: connected to native", nativeAppStatus);
+    if (config.DEBUG) {
+      console.log("Authenticate: connected to native", nativeAppStatus);
+    }
 
     const message: NativeAuthenticateRequest = {
       command: "authenticate",
@@ -67,7 +69,9 @@ export default async function authenticate(
       new UserTimeoutError(),
     );
 
-    config.DEBUG && console.log("Authenticate: authentication token received");
+    if (config.DEBUG) {
+      console.log("Authenticate: authentication token received");
+    }
 
     const isResponseValid = (
       response?.unverifiedCertificate &&

@@ -61,7 +61,9 @@ export default async function getCertificate(
   try {
     const nativeAppStatus = await nativeAppService.connect();
 
-    config.DEBUG && console.log("Get certificate: connected to native", nativeAppStatus);
+    if (config.DEBUG) {
+      console.log("Get certificate: connected to native", nativeAppStatus);
+    }
 
     const message: NativeGetSigningCertificateRequest = {
       command: "get-signing-certificate",

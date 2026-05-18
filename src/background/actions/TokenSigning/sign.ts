@@ -77,7 +77,9 @@ export default async function sign(
     const warnings: Array<string> = [];
     const nativeAppStatus = await nativeAppService.connect();
 
-    config.DEBUG && console.log("Sign: connected to native", nativeAppStatus);
+    if (config.DEBUG) {
+      console.log("Sign: connected to native", nativeAppStatus);
+    }
 
     let hashFunction = (
       Object.keys(digestCommandToHashFunction).includes(algorithm)

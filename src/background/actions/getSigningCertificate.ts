@@ -50,7 +50,9 @@ export default async function getSigningCertificate(
     nativeAppService = new NativeAppService();
     nativeAppStatus = await nativeAppService.connect();
 
-    config.DEBUG && console.log("getSigningCertificate: connected to native", nativeAppStatus);
+    if (config.DEBUG) {
+      console.log("getSigningCertificate: connected to native", nativeAppStatus);
+    }
 
     const message: NativeGetSigningCertificateRequest = {
       command: "get-signing-certificate",
@@ -78,7 +80,7 @@ export default async function getSigningCertificate(
     } else {
       throw new UnknownError("unexpected response from native application");
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("GetSigningCertificate:", error);
 
     return actionErrorHandler(Action.GET_SIGNING_CERTIFICATE_FAILURE, error, libraryVersion, nativeAppStatus?.version);

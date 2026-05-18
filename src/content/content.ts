@@ -48,13 +48,15 @@ async function send(message: object): Promise<object | void> {
   return response;
 }
 
-window.addEventListener("message", async (event) => {
+async function handleMessage(event: MessageEvent): Promise<void> {
   if (isWebeidEvent(event)) {
     // Warning messages should be ignored.
     // When there are deprecation warnings, these messages would be sent by the content script and handled by the Web-eID library.
     if (event.data.action === Action.WARNING) return;
 
-    config.DEBUG && console.log("Web-eID event: ", JSON.stringify(event));
+    if (config.DEBUG) {
+      console.log("Web-eID event: ", JSON.stringify(event));
+    }
 
     if (!window.isSecureContext) {
       const response = {
@@ -98,7 +100,9 @@ window.addEventListener("message", async (event) => {
       }
     }
   } else if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY && isTokenSigningEvent(event)) {
-    config.DEBUG && console.log("TokenSigning event:", JSON.stringify(event));
+    if (config.DEBUG) {
+      console.log("TokenSigning event:", JSON.stringify(event));
+    }
 
     if (!window.isSecureContext) {
       console.error(new ContextInsecureError());
@@ -115,6 +119,10 @@ window.addEventListener("message", async (event) => {
       window.postMessage(response, event.origin);
     }
   }
+}
+
+window.addEventListener("message", (event) => {
+  void handleMessage(event);
 });
 
 // --[ chrome-token-signing backwards compatibility ]---------------------------

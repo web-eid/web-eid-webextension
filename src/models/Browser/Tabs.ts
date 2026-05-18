@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-export type CreateProperties = {
+export interface CreateProperties {
   active?: boolean,
   index?: number,
   openerTabId?: number,
@@ -28,7 +28,7 @@ export type CreateProperties = {
   selected?: boolean,
   url?: string,
   windowId?: number,
-};
+}
 
 export type CreateCallback = (tab: object /* Tab */) => void;
 

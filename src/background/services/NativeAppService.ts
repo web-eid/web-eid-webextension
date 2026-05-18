@@ -21,6 +21,7 @@
  */
 
 import NativeUnavailableError from "@web-eid.js/errors/NativeUnavailableError";
+import { SerializedError } from "@web-eid.js/errors/SerializedError";
 import { deserializeError } from "@web-eid.js/utils/errorSerializer";
 import libraryConfig from "@web-eid.js/config";
 
@@ -36,6 +37,8 @@ export enum NativeAppState {
   DISCONNECTED,
 }
 
+type NativeAppResponse<T extends object> = T | { error: SerializedError };
+
 export default class NativeAppService {
   public state: NativeAppState = NativeAppState.UNINITIALIZED;
 
@@ -48,7 +51,7 @@ export default class NativeAppService {
     this.port.onDisconnect.addListener(this.disconnectListener.bind(this));
 
     try {
-      const message = await this.nextMessage(
+      const message = await this.nextMessage<{ version: string }>(
         libraryConfig.NATIVE_APP_HANDSHAKE_TIMEOUT,
         new NativeUnavailableError(
           `native application handshake timeout, ${libraryConfig.NATIVE_APP_HANDSHAKE_TIMEOUT}ms`
@@ -86,10 +89,12 @@ export default class NativeAppService {
   }
 
   disconnectListener(): void {
-    config.DEBUG && console.log("Native app disconnected.");
+    if (config.DEBUG) {
+      console.log("Native app disconnected.");
+    }
 
     // Accessing lastError when it exists stops chrome from throwing it unnecessarily.
-    chrome?.runtime?.lastError;
+    void chrome?.runtime?.lastError;
 
     this.state = NativeAppState.DISCONNECTED;
   }
@@ -100,13 +105,17 @@ export default class NativeAppService {
     this.state = NativeAppState.DISCONNECTED;
     this.port?.disconnect();
 
-    config.DEBUG && console.log("Native app port closed by extension.");
+    if (config.DEBUG) {
+      console.log("Native app port closed by extension.");
+    }
   }
 
-  async send<T>(message: NativeRequest, timeout: number, throwAfterTimeout: Error): Promise<T> {
+  async send<T extends object>(message: NativeRequest, timeout: number, throwAfterTimeout: Error): Promise<T> {
     switch (this.state) {
       case NativeAppState.CONNECTED: {
-        config.DEBUG && console.log("Sending message to native app", JSON.stringify(message));
+        if (config.DEBUG) {
+          console.log("Sending message to native app", JSON.stringify(message));
+        }
 
         const messageSize = calculateJsonSize(message);
 
@@ -117,7 +126,7 @@ export default class NativeAppService {
         this.port?.postMessage(message);
 
         try {
-          const response = await this.nextMessage(timeout, throwAfterTimeout);
+          const response = await this.nextMessage<T>(timeout, throwAfterTimeout);
 
           this.close();
 
@@ -157,14 +166,14 @@ export default class NativeAppService {
     }
   }
 
-  nextMessage(timeout: number, throwAfterTimeout: Error): Promise<any> {
+  nextMessage<T extends object>(timeout: number, throwAfterTimeout: Error): Promise<T> {
     return new Promise((resolve, reject) => {
       let cleanup: (() => void) | null = null;
       let timer: ReturnType<typeof setTimeout> | null = null;
 
-      const onMessageListener = (message: any): void => {
+      const onMessageListener = (message: NativeAppResponse<T>): void => {
         cleanup?.();
-        if (message.error) {
+        if ("error" in message) {
           reject(deserializeError(message.error));
         } else {
           resolve(message);

@@ -119,7 +119,11 @@ export default interface Runtime {
   /**
    * Get the complete manifest.json file, deserialized from JSON to an object.
    */
-  getManifest: () => any;
+  getManifest: () => Manifest;
+}
+
+export interface Manifest {
+  manifest_version: number;
 }
 
 export interface Port {

@@ -26,7 +26,13 @@ import Tabs from "./Browser/Tabs";
 
 declare global {
   const browser: Browser;
-  const chrome: any;
+  const chrome: Chrome;
+}
+
+interface Chrome {
+  runtime?: {
+    lastError?: Error;
+  };
 }
 
 export default interface Browser {

@@ -52,7 +52,8 @@ interface SemverDiff {
 }
 
 export function parseSemver(string = ""): Semver {
-  const result = string.match(semverPattern);
+  // const result = string.match(semverPattern);TODO: verify
+  const result = semverPattern.exec(string);
 
   const [, majorStr, minorStr, patchStr, rc, build] = result ? result : [];
 

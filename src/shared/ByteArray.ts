@@ -37,7 +37,7 @@ export default class ByteArray {
   }
 
   constructor(byteArray?: Array<number>) {
-    this.data = byteArray || [];
+    this.data = byteArray ?? [];
   }
 
   fromBase64(base64: string): ByteArray {

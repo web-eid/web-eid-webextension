@@ -49,10 +49,10 @@ export default function injectPageScript(): void {
       s.setAttribute("data-by", "Web-eID extension");
     }
 
-    if (browser.runtime.getManifest()["manifest_version"] >= 3) {
+    if (browser.runtime.getManifest().manifest_version >= 3) {
       s.src = browser.runtime.getURL("token-signing-page-script.js");
     } else {
-      s.innerHTML = "(" + pageScript + ")();";
+      s.innerHTML = `(${pageScript.toString()})();`;
     }
 
     (document.head || document.documentElement).appendChild(s);

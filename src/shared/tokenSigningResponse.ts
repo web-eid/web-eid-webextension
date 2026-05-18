@@ -39,7 +39,7 @@ import config from "../config";
 export default function tokenSigningResponse<T extends TokenSigningResponse>(
   result: TokenSigningResult,
   nonce: string,
-  optional?: Record<string, any>
+  optional?: Record<string, unknown>
 ): T {
   const response = {
     nonce,

@@ -21,12 +21,12 @@
  */
 
 export default class Mutex {
-  private lock: Promise<any> = Promise.resolve();
+  private lock: Promise<void> = Promise.resolve();
 
   async acquire(): Promise<() => void> {
-    let release: (value?: unknown) => void;
+    let release: () => void;
 
-    const newLock = new Promise((resolve) => release = resolve);
+    const newLock = new Promise<void>((resolve) => release = resolve);
     const oldLock = this.lock;
 
     this.lock = newLock;

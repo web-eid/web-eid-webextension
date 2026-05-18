@@ -104,10 +104,12 @@ async function onTokenSigningAction(message: TokenSigningMessage, sender: Messag
 }
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const respond = sendResponse as (value: void | object) => void;
+
   if ((message as ExtensionRequest).action) {
-    onAction(message, sender).then(sendResponse);
+    void onAction(message as ExtensionRequest, sender).then(respond);
   } else if ((message as TokenSigningMessage).type) {
-    onTokenSigningAction(message, sender).then(sendResponse);
+    void onTokenSigningAction(message as TokenSigningMessage, sender).then(respond);
   }
   return true;
 });
