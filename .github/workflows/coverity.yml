@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Estonian Information System Authority
+# SPDX-License-Identifier: MIT
+
 name: "Coverity"
 
 on:
@@ -21,7 +24,7 @@ jobs:
       with:
         node-version: '20.x'
     - name: Cache Node.js modules
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         # npm cache files are stored in `~/.npm` on Linux/macOS
         path: ~/.npm
