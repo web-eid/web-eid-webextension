@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Estonian Information System Authority
+// SPDX-License-Identifier: MIT
+
 // @ts-check
 import globals from "globals";
 import eslint from "@eslint/js";
