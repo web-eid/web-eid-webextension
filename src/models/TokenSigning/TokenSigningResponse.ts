@@ -20,6 +20,8 @@
  * SOFTWARE.
  */
 
+import { SerializedError } from "@web-eid.js/errors/SerializedError";
+
 type TokenSigningError
   = "no_certificates"
   | "invalid_argument"
@@ -61,5 +63,6 @@ export interface TokenSigningErrorResponse extends TokenSigningResponse {
   result: TokenSigningError;
 
   // Exception details object, provided by Web-eID extension
-  nativeException?: any;
+  nativeException?: SerializedError;
+  error?: SerializedError;
 }

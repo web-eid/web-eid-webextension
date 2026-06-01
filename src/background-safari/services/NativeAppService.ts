@@ -132,7 +132,11 @@ export default class NativeAppService {
           const messageSize = calculateJsonSize(message);
 
           if (messageSize > config.NATIVE_MESSAGE_MAX_BYTES) {
-            throw new Error(`native application message exceeded ${config.NATIVE_MESSAGE_MAX_BYTES} bytes`);
+            const error = new Error(`native application message exceeded ${config.NATIVE_MESSAGE_MAX_BYTES} bytes`);
+
+            this.close(error);
+            reject(error);
+            return;
           }
 
           void browser.runtime.sendNativeMessage("application.id", message, onResponse);

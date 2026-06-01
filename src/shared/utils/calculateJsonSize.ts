@@ -27,8 +27,10 @@
  *
  * @returns Size in bytes
  */
-export default function calculateJsonSize(object: any): number {
+export default function calculateJsonSize(object: unknown): number {
   const objectString = JSON.stringify(object);
+  if (objectString === undefined) return 0;
+
   const objectStringBlob = new Blob([objectString]);
 
   return objectStringBlob.size;

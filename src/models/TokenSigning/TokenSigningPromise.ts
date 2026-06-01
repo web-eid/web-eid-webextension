@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-export default interface TokenSigningPromise {
-  resolve: (value?: any) => void;
-  reject: (reason?: any) => void;
+export default interface TokenSigningPromise<T> {
+  resolve: (value: T) => void;
+  reject: (reason?: unknown) => void;
 }

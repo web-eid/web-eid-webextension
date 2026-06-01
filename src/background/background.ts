@@ -40,7 +40,7 @@ async function onAction(message: ExtensionRequest, sender: MessageSender): Promi
 
         sender,
         message.libraryVersion,
-        message.options?.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
+        message.options?.userInteractionTimeout ?? libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.options?.lang
       );
 
@@ -48,7 +48,7 @@ async function onAction(message: ExtensionRequest, sender: MessageSender): Promi
       return await getSigningCertificate(
         sender,
         message.libraryVersion,
-        message.options?.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
+        message.options?.userInteractionTimeout ?? libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.options?.lang
       );
 
@@ -60,7 +60,7 @@ async function onAction(message: ExtensionRequest, sender: MessageSender): Promi
 
         sender,
         message.libraryVersion,
-        message.options?.userInteractionTimeout || libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
+        message.options?.userInteractionTimeout ?? libraryConfig.DEFAULT_USER_INTERACTION_TIMEOUT,
         message.options?.lang
       );
 
