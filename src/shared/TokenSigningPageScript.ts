@@ -21,15 +21,17 @@
  */
 
 import {
-  TokenSigningCertResponse,
-  TokenSigningResponse,
-} from "../models/TokenSigning/TokenSigningResponse";
-import {
   TokenSigningGetCertificateMessage,
   TokenSigningMessage,
   TokenSigningSignMessage,
   TokenSigningVersionMessage,
 } from "../models/TokenSigning/TokenSigningMessage";
+import {
+  TokenSigningResponse,
+  TokenSigningResult,
+} from "../models/TokenSigning/TokenSigningResponse";
+
+import { isRecord } from "./utils/typeGuards";
 
 import TokenSigningPromise from "../models/TokenSigning/TokenSigningPromise";
 
@@ -39,43 +41,84 @@ declare global {
   }
 }
 
+interface TokenSigningHexResult {
+  hex: string;
+}
+
+type TokenSigningLegacyResult = TokenSigningHexResult | string;
+type TokenSigningPageResponse =
+  & TokenSigningResponse
+  & {
+    cert?: unknown;
+    signature?: unknown;
+    version?: unknown;
+  };
+
+const TOKEN_SIGNING_RESULTS = new Set<string>([
+  "ok",
+  "no_certificates",
+  "invalid_argument",
+  "user_cancel",
+  "not_allowed",
+  "driver_error",
+  "pin_blocked",
+  "technical_error",
+]);
+
+function isTokenSigningResult(result: unknown): result is TokenSigningResult {
+  return typeof result === "string" && TOKEN_SIGNING_RESULTS.has(result);
+}
+
+function isTokenSigningPageResponse(data: unknown): data is TokenSigningPageResponse {
+  return (
+    isRecord(data) &&
+    data.src === "background.js" &&
+    typeof data.nonce === "string" &&
+    typeof data.extension === "string" &&
+    data.isWebeid === true &&
+    isTokenSigningResult(data.result)
+  );
+}
+
 export default function pageScript(): void {
   let hasDeprecationWarningDisplayed = false;
 
-  const eidPromises: Record<string, TokenSigningPromise> = {};
+  const eidPromises: Record<string, TokenSigningPromise<TokenSigningLegacyResult>> = {};
 
   // Turn the incoming message from extension
   // into pending Promise resolving
-  window.addEventListener("message", function (event) {
+  window.addEventListener("message", function (event: MessageEvent<unknown>) {
     if (event.source !== window) return;
 
-    if (event.data.src && (event.data.src === "background.js")) {
+    if (isTokenSigningPageResponse(event.data)) {
       console.log("Page received: ");
       console.log(event.data);
 
       // Get the promise
-      if (event.data.nonce) {
-        const p = eidPromises[event.data.nonce];
+      const p = eidPromises[event.data.nonce];
 
-        if (event.data.result === "ok") {
-          if (event.data.signature !== undefined) {
-            p.resolve({ hex: event.data.signature });
-          } else if (event.data.version !== undefined) {
-            p.resolve(event.data.extension + "/" + event.data.version);
-          } else if (event.data.cert !== undefined) {
-            p.resolve({ hex: event.data.cert });
-          } else {
-            console.log("No idea how to handle message");
-            console.log(event.data);
-          }
-        } else {
-          p.reject(new Error(event.data.result));
-        }
-
-        delete eidPromises[event.data.nonce];
-      } else {
-        console.log("No nonce in event msg");
+      if (!p) {
+        console.log("No promise for event msg");
+        console.log(event.data);
+        return;
       }
+
+      if (event.data.result === "ok") {
+        if (typeof event.data.signature === "string") {
+          p.resolve({ hex: event.data.signature });
+        } else if (typeof event.data.version === "string") {
+          p.resolve(event.data.extension + "/" + event.data.version);
+        } else if (typeof event.data.cert === "string") {
+          p.resolve({ hex: event.data.cert });
+        } else {
+          console.log("No idea how to handle message");
+          console.log(event.data);
+        }
+      } else {
+        p.reject(new Error(event.data.result));
+      }
+
+      delete eidPromises[event.data.nonce];
     }
   }, false);
 
@@ -86,8 +129,8 @@ export default function pageScript(): void {
     return val;
   }
 
-  function messagePromise<TMessage extends TokenSigningMessage, TResponse extends TokenSigningResponse>(
-    msg: TMessage
+  function messagePromise<TResponse extends TokenSigningLegacyResult>(
+    msg: TokenSigningMessage
   ): Promise<TResponse> {
     if (!hasDeprecationWarningDisplayed) {
       console.warn("TokenSigning API is deprecated. Please consider switching to the new Web-eID library.");
@@ -98,12 +141,15 @@ export default function pageScript(): void {
       // send message
       window.postMessage(msg, "*");
       // and store promise callbacks
-      eidPromises[msg.nonce] = { resolve, reject };
+      eidPromises[msg.nonce] = {
+        reject,
+        resolve: (value) => resolve(value as TResponse),
+      };
     });
   }
 
   window.TokenSigning = class TokenSigning {
-    getCertificate(options: { lang?: string; filter?: "AUTH" | "SIGN" }): Promise<TokenSigningCertResponse> {
+    getCertificate(options: { lang?: string; filter?: "AUTH" | "SIGN" }): Promise<TokenSigningHexResult> {
       const msg: TokenSigningGetCertificateMessage = {
         src:    "page.js",
         nonce:  nonce(),
@@ -120,7 +166,7 @@ export default function pageScript(): void {
       cert: { hex: string },
       hash: { type: string; hex: string },
       options: { lang: string; info: string }
-    ): Promise<TokenSigningResponse> {
+    ): Promise<TokenSigningHexResult> {
       const msg: TokenSigningSignMessage = {
         src:      "page.js",
         nonce:    nonce(),
@@ -136,7 +182,7 @@ export default function pageScript(): void {
       return messagePromise(msg);
     }
 
-    getVersion(): Promise<TokenSigningResponse> {
+    getVersion(): Promise<string> {
       const msg: TokenSigningVersionMessage = {
         src:   "page.js",
         nonce: nonce(),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024 Estonian Information System Authority
+ * Copyright (c) 2020-2026 Estonian Information System Authority
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,26 +21,44 @@
  */
 
 import ErrorCode from "@web-eid.js/errors/ErrorCode";
+import UnknownError from "@web-eid.js/errors/UnknownError";
 
-import { serializeError } from "@web-eid.js/utils/errorSerializer";
+import { isRecord } from "./typeGuards";
 
-import { getErrorCode, toError } from "../../../shared/utils/error";
+export type ErrorWithMetadata = Error & {
+  code?: ErrorCode | string;
+  extension?: string;
+};
 
-import { TokenSigningErrorResponse } from "../../../models/TokenSigning/TokenSigningResponse";
-
-import tokenSigningResponse from "../../../shared/tokenSigningResponse";
-
-export default function errorToResponse(nonce: string, error: unknown): TokenSigningErrorResponse {
-  const errorCode = getErrorCode(error);
-
-  if (errorCode === ErrorCode.ERR_WEBEID_USER_CANCELLED) {
-    return tokenSigningResponse<TokenSigningErrorResponse>("user_cancel", nonce);
-  } else if (errorCode === ErrorCode.ERR_WEBEID_NATIVE_FATAL ||
-             errorCode === ErrorCode.ERR_WEBEID_NATIVE_INVALID_ARGUMENT) {
-    const nativeException = serializeError(toError(error));
-
-    return tokenSigningResponse<TokenSigningErrorResponse>("driver_error", nonce, { nativeException });
-  } else {
-    return tokenSigningResponse<TokenSigningErrorResponse>("technical_error", nonce, { error: serializeError(toError(error)) });
+export function getErrorCode(error: unknown): ErrorCode | string | undefined {
+  if (!isRecord(error) || typeof error.code !== "string") {
+    return undefined;
   }
+
+  return error.code;
+}
+
+export function toError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  const fallback = new UnknownError(
+    typeof error === "string" ? error : undefined
+  );
+
+  if (isRecord(error)) {
+    Object.entries(error).forEach(([key, value]) => {
+      Reflect.set(fallback, key, value);
+    });
+  }
+
+  return fallback;
+}
+
+export function withExtensionVersion(error: unknown, extensionVersion: string): ErrorWithMetadata {
+  const errorWithMetadata = toError(error) as ErrorWithMetadata;
+  errorWithMetadata.extension = extensionVersion;
+
+  return errorWithMetadata;
 }

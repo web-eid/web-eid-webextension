@@ -20,11 +20,14 @@
  * SOFTWARE.
  */
 
+import { ExtensionFailureResponse } from "@web-eid.js/models/message/ExtensionResponse";
+import { serializeError } from "@web-eid.js/utils/errorSerializer";
+
 import Action from "@web-eid.js/models/Action";
 import ErrorCode from "@web-eid.js/errors/ErrorCode";
-import { ExtensionFailureResponse } from "@web-eid.js/models/message/ExtensionResponse";
 import VersionMismatchError from "@web-eid.js/errors/VersionMismatchError";
-import { serializeError } from "@web-eid.js/utils/errorSerializer";
+
+import { getErrorCode, toError } from "./utils/error";
 
 import checkCompatibility from "./utils/checkCompatibility";
 import config from "../config";
@@ -35,11 +38,12 @@ export default function actionErrorHandler(
   | Action.GET_SIGNING_CERTIFICATE_FAILURE
   | Action.SIGN_FAILURE,
 
-  originalError: any,
+  originalError: unknown,
   libraryVersion: string,
   nativeAppVersion?: string,
 ): ExtensionFailureResponse {
-  let error;
+  let error = toError(originalError);
+  const errorCode = getErrorCode(originalError);
 
   /**
    * Always show the original error when native app version is unavailable.
@@ -50,8 +54,8 @@ export default function actionErrorHandler(
    * Always show the original error when the error code is ERR_WEBEID_USER_CANCELLED.
    * In this case the user cancelled the operation in native app UI, which means the native app API had to be compatible for this action.
    */
-  if (!nativeAppVersion || originalError?.code === ErrorCode.ERR_WEBEID_USER_CANCELLED) {
-    error = originalError;
+  if (!nativeAppVersion || errorCode === ErrorCode.ERR_WEBEID_USER_CANCELLED) {
+    error = toError(originalError);
 
   } else {
     const versions = {
@@ -65,7 +69,7 @@ export default function actionErrorHandler(
     error = (
       (requiresUpdate.extension || requiresUpdate.nativeApp)
         ? new VersionMismatchError(undefined, versions, requiresUpdate)
-        : originalError
+        : toError(originalError)
     );
   }
 

@@ -72,11 +72,11 @@ export default interface Runtime {
    *          Otherwise it will be fulfilled with no arguments. If an error occurs while connecting to
    *          the native application, the promise will be rejected with an error message.
    */
-  sendNativeMessage: (
+  sendNativeMessage: <TResponse = unknown>(
     application: string,
     message: object,
-    callback?: (message: any) => void
-  ) => Promise<object | void>;
+    callback?: (message: TResponse) => void
+  ) => Promise<TResponse | void>;
 
   /**
    * Sends a single message to event listeners within your extension or a different extension.
@@ -98,13 +98,13 @@ export default interface Runtime {
    * @param options.toProxyScript Must be `true` if the message is intended for
    *                              a PAC file loaded using the proxy API.
    */
-  sendMessage: (
+  sendMessage: <TResponse = unknown>(
     message: object,
     options?: {
       includeTlsChannelId?: boolean;
       toProxyScript?: boolean;
     }
-  ) => Promise<object | void>;
+  ) => Promise<TResponse | void>;
 
   connectNative: (application: string) => Port;
 
@@ -135,12 +135,12 @@ export interface Port {
     removeListener: (listener: () => void) => void;
   };
   onMessage: {
-    addListener:    (listener: (message: any) => void) => void;
-    removeListener: (listener: (message: any) => void) => void;
+    addListener:    <TMessage = unknown>(listener: (message: TMessage) => void) => void;
+    removeListener: <TMessage = unknown>(listener: (message: TMessage) => void) => void;
   };
   postMessage: (message: object) => void;
 
-  sender?: any;
+  sender?: MessageSender;
 }
 
 export type OnInstallReason = "install" | "update" | "chrome_update" | "shared_module_update";
@@ -152,8 +152,9 @@ export interface OnInstalledDetails {
   temporary: boolean;
 }
 
-export type OnInstalledCallback = (details: OnInstalledDetails, sender: MessageSender, sendResponse?: any) => Promise<any> | void | boolean;
-export type OnMessageCallback = (message: any, sender: MessageSender, sendResponse?: any) => Promise<any> | void | boolean;
+export type SendResponse = (response?: unknown) => void;
+export type OnInstalledCallback = (details: OnInstalledDetails, sender: MessageSender, sendResponse?: SendResponse) => Promise<unknown> | void | boolean;
+export type OnMessageCallback = (message: unknown, sender: MessageSender, sendResponse?: SendResponse) => Promise<unknown> | void | boolean;
 
 export interface MessageSender {
   /**

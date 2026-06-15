@@ -23,36 +23,67 @@
 import Action from "@web-eid.js/models/Action";
 import ContextInsecureError from "@web-eid.js/errors/ContextInsecureError";
 
+import { isRecord } from "../shared/utils/typeGuards";
+
 import { TokenSigningErrorResponse } from "../models/TokenSigning/TokenSigningResponse";
+
 import config from "../config";
 import injectPageScript from "./TokenSigning/injectPageScript";
 import tokenSigningResponse from "../shared/tokenSigningResponse";
 
-function isWebeidEvent(event: MessageEvent): boolean {
+type WebeidPageMessage = Record<string, unknown> & {
+  action: string;
+};
+
+type TokenSigningPageMessage = Record<string, unknown> & {
+  nonce: string;
+  type: "VERSION" | "CERT" | "SIGN";
+};
+
+type RuntimeResponseWithWarnings = object & {
+  warnings?: Array<unknown>;
+};
+
+const WEBEID_ACTION = {
+  AUTHENTICATE:            Action.AUTHENTICATE as string,
+  GET_SIGNING_CERTIFICATE: Action.GET_SIGNING_CERTIFICATE as string,
+  SIGN:                    Action.SIGN as string,
+  STATUS:                  Action.STATUS as string,
+  WARNING:                 Action.WARNING as string,
+};
+
+function isWebeidEvent(event: MessageEvent<unknown>): event is MessageEvent<WebeidPageMessage> {
+  const data = event.data;
+
   return (
     event.source === window &&
-    event.data?.action?.startsWith?.("web-eid:")
+    isRecord(data) &&
+    typeof data.action === "string" &&
+    data.action.startsWith("web-eid:")
   );
 }
 
-function isTokenSigningEvent(event: MessageEvent): boolean {
+function isTokenSigningEvent(event: MessageEvent<unknown>): event is MessageEvent<TokenSigningPageMessage> {
+  const data = event.data;
+
   return (
     event.source === window &&
-    event.data.nonce &&
-    ["VERSION", "CERT", "SIGN"].includes(event.data.type)
+    isRecord(data) &&
+    typeof data.nonce === "string" &&
+    (data.type === "VERSION" || data.type === "CERT" || data.type === "SIGN")
   );
 }
 
 async function send(message: object): Promise<object | void> {
-  const response = await browser.runtime.sendMessage(message);
+  const response = await browser.runtime.sendMessage<object>(message);
   return response;
 }
 
-async function handleMessage(event: MessageEvent): Promise<void> {
+async function handleMessage(event: MessageEvent<unknown>): Promise<void> {
   if (isWebeidEvent(event)) {
     // Warning messages should be ignored.
     // When there are deprecation warnings, these messages would be sent by the content script and handled by the Web-eID library.
-    if (event.data.action === Action.WARNING) return;
+    if (event.data.action === WEBEID_ACTION.WARNING) return;
 
     if (config.DEBUG) {
       console.log("Web-eID event: ", JSON.stringify(event));
@@ -70,25 +101,25 @@ async function handleMessage(event: MessageEvent): Promise<void> {
       let response;
 
       switch (event.data.action) {
-        case Action.STATUS: {
+        case WEBEID_ACTION.STATUS: {
           window.postMessage({ action: Action.STATUS_ACK }, event.origin);
           response = await send(event.data);
           break;
         }
 
-        case Action.AUTHENTICATE: {
+        case WEBEID_ACTION.AUTHENTICATE: {
           window.postMessage({ action: Action.AUTHENTICATE_ACK }, event.origin);
           response = await send(event.data);
           break;
         }
 
-        case Action.SIGN: {
+        case WEBEID_ACTION.SIGN: {
           window.postMessage({ action: Action.SIGN_ACK }, event.origin);
           response = await send(event.data);
           break;
         }
 
-        case Action.GET_SIGNING_CERTIFICATE: {
+        case WEBEID_ACTION.GET_SIGNING_CERTIFICATE: {
           window.postMessage({ action: Action.GET_SIGNING_CERTIFICATE_ACK }, event.origin);
           response = await send(event.data);
           break;
@@ -112,7 +143,7 @@ async function handleMessage(event: MessageEvent): Promise<void> {
 
       window.postMessage(response, event.origin);
     } else {
-      const response = await send(event.data) as { warnings?: [], [key: string]: any } | void;
+      const response = await send(event.data) as RuntimeResponseWithWarnings | void;
 
       response?.warnings?.forEach((warning) => console.warn(warning));
 
@@ -121,7 +152,7 @@ async function handleMessage(event: MessageEvent): Promise<void> {
   }
 }
 
-window.addEventListener("message", (event) => {
+window.addEventListener("message", (event: MessageEvent<unknown>) => {
   void handleMessage(event);
 });
 

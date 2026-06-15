@@ -34,6 +34,7 @@ import { serializeError } from "@web-eid.js/utils/errorSerializer";
 import NativeAppService from "../services/NativeAppService";
 import checkCompatibility from "../../shared/utils/checkCompatibility";
 import config from "../../config";
+import { withExtensionVersion } from "../../shared/utils/error";
 
 export default async function status(libraryVersion: string): Promise<ExtensionStatusResponse | ExtensionFailureResponse> {
   const extensionVersion = config.VERSION;
@@ -73,14 +74,14 @@ export default async function status(libraryVersion: string): Promise<ExtensionS
 
       ...componentVersions,
     };
-  } catch (error: any) {
-    error.extension = extensionVersion;
+  } catch (error) {
+    const errorWithExtension = withExtensionVersion(error, extensionVersion);
 
-    console.error("Status:", error);
+    console.error("Status:", errorWithExtension);
 
     return {
       action: Action.STATUS_FAILURE,
-      error:  serializeError(error),
+      error:  serializeError(errorWithExtension),
     };
   } finally {
     nativeAppService.close();
