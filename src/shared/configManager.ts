@@ -26,9 +26,9 @@ async function setConfigOverride<K extends keyof typeof defaultConfig>(key: K, v
 }
 
 async function loadConfigFromStorage() {
-  const isStorageEnabled = await isBrowserStorageEnabled();
-  if (isStorageEnabled) {
-    try {
+  try {
+    const isStorageEnabled = await isBrowserStorageEnabled();
+    if (isStorageEnabled) {
       const values = await browser.storage.local.get(overrideableConfigKeys);
 
       for (const key of overrideableConfigKeys) {
@@ -36,9 +36,9 @@ async function loadConfigFromStorage() {
           setConfigValueOrResetToDefaultOnNull(key, values[key]);
         }
       }
-    } catch (error) {
-      console.error("Failed to load configuration from storage:", error);
     }
+  } catch (error) {
+    console.error("Failed to load configuration from storage:", error);
   }
 }
 

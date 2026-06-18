@@ -39,7 +39,8 @@
   },
   "devtools_page": "views/devtools/devtools.html",
   "permissions": [
-    "nativeMessaging"
+    "nativeMessaging",
+    "storage"
   ],
   "optional_permissions": [
     "devtools"

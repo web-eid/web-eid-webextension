@@ -83,7 +83,7 @@ export default interface Runtime {
   /**
    * Get the complete manifest.json file, deserialized from JSON to an object.
    */
-  getManifest: () => any;
+  getManifest: () => Manifest;
 
   /**
    * Fired when a connection is made with either an extension process or a content script.
@@ -120,6 +120,12 @@ export interface Port {
   postMessage: (message: object) => void;
 
   sender?: any;
+}
+
+export interface Manifest {
+  manifest_version: number;
+  optional_permissions?: Array<string>;
+  permissions?: Array<string>;
 }
 
 export type OnMessageCallback = (message: any, sender: MessageSender, sendResponse?: any) => Promise<any> | void | boolean;
