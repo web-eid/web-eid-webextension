@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: Estonian Information System Authority
 // SPDX-License-Identifier: MIT
 
-import {config, setConfigOverride} from "../configManager";
+import {config, loadConfigFromStorage, setConfigOverride} from "../configManager";
 
 const mockStorageLocal = {
+  get: jest.fn(),
   set: jest.fn(),
   remove: jest.fn()
 };
@@ -25,7 +26,10 @@ jest.mock("../utils/isBrowserStorageEnabled", () => ({
 
 describe("setConfigOverride", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
+    mockStorageLocal.get.mockResolvedValue({});
+    mockStorageLocal.set.mockResolvedValue(undefined);
+    mockStorageLocal.remove.mockResolvedValue(undefined);
   });
 
   describe("when storage is enabled", () => {
@@ -131,5 +135,63 @@ describe("setConfigOverride", () => {
       await expect(setConfigOverride("ALLOW_HTTP_LOCALHOST", true))
         .rejects.toThrow("Storage check failed");
     });
+  });
+});
+
+describe("loadConfigFromStorage", () => {
+  let consoleError: jest.SpyInstance;
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+    config.ALLOW_HTTP_LOCALHOST = false;
+    config.NATIVE_MESSAGE_MAX_BYTES = 8192;
+    mockStorageLocal.get.mockResolvedValue({});
+    mockIsBrowserStorageEnabled.mockResolvedValue(true);
+    consoleError = jest.spyOn(console, "error").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    consoleError.mockRestore();
+  });
+
+  it("should load valid stored override values into config", async () => {
+    mockStorageLocal.get.mockResolvedValue({
+      ALLOW_HTTP_LOCALHOST:    true,
+      NATIVE_MESSAGE_MAX_BYTES: 4096,
+    });
+
+    await loadConfigFromStorage();
+
+    expect(config.ALLOW_HTTP_LOCALHOST).toEqual(true);
+    expect(config.NATIVE_MESSAGE_MAX_BYTES).toEqual(4096);
+  });
+
+  it("should ignore stored values with invalid types", async () => {
+    mockStorageLocal.get.mockResolvedValue({
+      ALLOW_HTTP_LOCALHOST:    "true",
+      NATIVE_MESSAGE_MAX_BYTES: "4096",
+    });
+
+    await loadConfigFromStorage();
+
+    expect(config.ALLOW_HTTP_LOCALHOST).toEqual(false);
+    expect(config.NATIVE_MESSAGE_MAX_BYTES).toEqual(8192);
+  });
+
+  it("should not read storage when storage is disabled", async () => {
+    mockIsBrowserStorageEnabled.mockResolvedValue(false);
+
+    await loadConfigFromStorage();
+
+    expect(mockStorageLocal.get).not.toHaveBeenCalled();
+  });
+
+  it("should handle storage read errors", async () => {
+    const error = new Error("Storage get failed");
+    mockStorageLocal.get.mockRejectedValue(error);
+
+    await expect(loadConfigFromStorage()).resolves.toBeUndefined();
+
+    expect(consoleError).toHaveBeenCalledWith("Failed to load configuration from storage:", error);
   });
 });

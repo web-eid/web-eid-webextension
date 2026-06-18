@@ -39,31 +39,32 @@ export default class Logger {
 
   async log(...args: Array<any>): Promise<void> {
     await this.devToolsLog("log", args);
-    console.log(...args);
+    await this.consoleLog("log", args);
   }
 
   async info(...args: Array<any>): Promise<void> {
     await this.devToolsLog("info", args);
-    console.info(...args);
+    await this.consoleLog("info", args);
   }
 
   async warn(...args: Array<any>): Promise<void> {
     await this.devToolsLog("warn", args);
-    console.warn(...args);
+    await this.consoleLog("warn", args);
   }
 
   async error(...args: Array<any>): Promise<void> {
     await this.devToolsLog("error", args);
-    console.error(...args);
+    await this.consoleLog("error", args);
   }
 
   async debug(...args: Array<any>): Promise<void> {
     await this.devToolsLog("debug", args);
-    console.debug(...args);
+    await this.consoleLog("debug", args);
   }
 
   async isDevToolsEnabled(): Promise<boolean> {
-    const isOptionalPermissionDevToolsTurnedOn = Boolean(browser.runtime.getManifest().optional_permissions?.includes("devtools"));
+    const manifest                             = browser.runtime.getManifest();
+    const isOptionalPermissionDevToolsTurnedOn = Boolean(manifest.optional_permissions?.includes("devtools"));
 
     if (isOptionalPermissionDevToolsTurnedOn) {
       return true;
@@ -78,6 +79,32 @@ export default class Logger {
     }
 
     return false;
+  }
+
+  async isDebugEnabled(): Promise<boolean> {
+    if (this.isContentScript) {
+      return false;
+    }
+
+    try {
+      const isStorageEnabled = await isBrowserStorageEnabled();
+
+      if (isStorageEnabled) {
+        const { devtoolsEnabled } = await browser.storage.local.get(["devtoolsEnabled"]);
+
+        return Boolean(devtoolsEnabled);
+      }
+    } catch {
+      return false;
+    }
+
+    return false;
+  }
+
+  private async consoleLog(type: "log" | "info" | "warn" | "error" | "debug", args: Array<any>): Promise<void> {
+    if (await this.isDebugEnabled()) {
+      console[type](...args);
+    }
   }
 
   async devToolsLog(type: "event" | "log" | "info" | "warn" | "error" | "debug", rawMessage: Array<any>) {

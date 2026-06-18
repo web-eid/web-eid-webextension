@@ -11,6 +11,7 @@ import calculateJsonSize from "../../shared/utils/calculateJsonSize";
 import { config } from "../../shared/configManager";
 
 import Logger from "../../shared/Logger";
+import isLoopbackAddress from "../../shared/utils/isLoopbackAddress";
 
 const logger = new Logger("NativeAppService.ts");
 
@@ -123,6 +124,18 @@ export default class NativeAppService {
           if (messageSize > config.NATIVE_MESSAGE_MAX_BYTES) {
             throw new Error(`native application message exceeded ${config.NATIVE_MESSAGE_MAX_BYTES} bytes`);
           }
+
+          if (config.ALLOW_HTTP_LOCALHOST && message.arguments?.origin) {
+            const url = new URL(message.arguments.origin);
+
+            if (url.protocol === "http:" && isLoopbackAddress(url.hostname)) {
+              url.protocol = "https:";
+
+              message.arguments.origin = url.origin;
+              logger.warn("Setting ALLOW_HTTP_LOCALHOST enabled, replaced origin with " + message.arguments.origin);
+            }
+          }
+
           logger.log("Sending message to native application", message);
 
           browser.runtime.sendNativeMessage("application.id", message, onResponse);
