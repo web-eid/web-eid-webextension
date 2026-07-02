@@ -43,11 +43,6 @@ The Web eID extension for Safari is built as a [Safari web extension](https://de
     SOURCE_DATE_EPOCH=$(cat ../previous-build/dist/firefox/SOURCE_DATE_EPOCH) npm run clean build package
     ```
 
-    For backwards compatibility with TokenSigning API, set the `TOKEN_SIGNING_BACKWARDS_COMPATIBILITY` environment variable to `true`.
-    ```bash
-    TOKEN_SIGNING_BACKWARDS_COMPATIBILITY=true npm run clean build package
-    ```
-
 5. Load in Firefox as a Temporary Extension
     1. Open `about:debugging#/runtime/this-firefox`
     2. Click "Load temporary Add-on..." and open `/web-eid-webextension/dist/manifest.json`

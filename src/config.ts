@@ -26,7 +26,7 @@ export default Object.freeze({
    * @see https://github.com/open-eid/chrome-token-signing
    * @see https://github.com/hwcrypto/hwcrypto.js/wiki
    */
-  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY?.toUpperCase() === "TRUE",
+  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY:  true as boolean,
   TOKEN_SIGNING_USER_INTERACTION_TIMEOUT: 1000 * 60 * 5, // 5 minutes
 
   /**

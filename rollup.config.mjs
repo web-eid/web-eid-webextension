@@ -6,17 +6,12 @@ import { fileURLToPath } from "url";
 
 import alias from "@rollup/plugin-alias";
 import cleanup from "rollup-plugin-cleanup";
-import injectProcessEnv from "rollup-plugin-inject-process-env";
 import license from "rollup-plugin-license";
 import polyfill from "rollup-plugin-polyfill";
 import resolve from "@rollup/plugin-node-resolve";
 
 // List of browsers to build for.
 const browsers = ["chrome", "firefox", "safari"];
-
-const processEnvConf = {
-  TOKEN_SIGNING_BACKWARDS_COMPATIBILITY: process.env.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY,
-}
 
 const pluginsConf = (environment) => [
   alias({
@@ -37,7 +32,6 @@ const pluginsConf = (environment) => [
   }),
 
   ...(environment === "chrome"      ? [ polyfill(["webextension-polyfill"]) ] : []),
-  ...(environment !== "page-script" ? [ injectProcessEnv(processEnvConf)    ] : []),
 ];
 
 // Use flatMap() to create a configuration for each browser and each of the "content" and "background" scripts.
@@ -63,7 +57,6 @@ const tokenSigningPageConfig = {
     file:   `dist/${browser}/token-signing-page-script.js`,
     format: "iife",
   })),
-  plugins: pluginsConf("page-script"),
   context: "window",
 };
 
