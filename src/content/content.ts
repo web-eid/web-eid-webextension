@@ -4,8 +4,8 @@
 import Action from "@web-eid.js/models/Action";
 import ContextInsecureError from "@web-eid.js/errors/ContextInsecureError";
 
+import { config, configInitialized } from "../shared/configManager";
 import { TokenSigningErrorResponse } from "../models/TokenSigning/TokenSigningResponse";
-import config from "../config";
 import injectPageScript from "./TokenSigning/injectPageScript";
 import tokenSigningResponse from "../shared/tokenSigningResponse";
 
@@ -56,7 +56,7 @@ async function ack(
   window.postMessage(message, origin);
 }
 
-window.addEventListener("message", async (event) => {
+async function handleMessage(event: MessageEvent): Promise<void> {
   if (isWebeidEvent(event)) {
     if (isWebeidResponseEvent(event)) return;
 
@@ -126,9 +126,17 @@ window.addEventListener("message", async (event) => {
       window.postMessage(response, event.origin);
     }
   }
-});
-
-// --[ chrome-token-signing backwards compatibility ]---------------------------
-if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
-  injectPageScript();
 }
+
+async function initializeContentScript(): Promise<void> {
+  await configInitialized;
+
+  window.addEventListener("message", handleMessage);
+
+  // --[ chrome-token-signing backwards compatibility ]-------------------------
+  if (config.TOKEN_SIGNING_BACKWARDS_COMPATIBILITY) {
+    injectPageScript();
+  }
+}
+
+void initializeContentScript();
