@@ -34,7 +34,6 @@ jobs:
     - name: Build
       run: |
         export SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)
-        export TOKEN_SIGNING_BACKWARDS_COMPATIBILITY=true
         npm run test clean build package
 
     - name: Generate SBOM

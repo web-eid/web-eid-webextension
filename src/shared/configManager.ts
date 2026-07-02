@@ -5,14 +5,16 @@ import defaultConfig from "../config";
 import isBrowserStorageEnabled from "./utils/isBrowserStorageEnabled";
 
 type Config = {
-  -readonly [key in keyof typeof defaultConfig]: typeof defaultConfig[key];
+  -readonly [key in keyof typeof defaultConfig]: (typeof defaultConfig)[key];
 };
 
 const config = JSON.parse(JSON.stringify(defaultConfig)) as Config;
+const configInitialized = loadConfigFromStorage();
 
 const overrideableConfigKeys: Array<keyof typeof defaultConfig> = [
   "NATIVE_MESSAGE_MAX_BYTES",
   "NATIVE_GRACEFUL_DISCONNECT_TIMEOUT",
+  "TOKEN_SIGNING_BACKWARDS_COMPATIBILITY",
   "TOKEN_SIGNING_USER_INTERACTION_TIMEOUT",
   "ALLOW_HTTP_LOCALHOST"
 ];
@@ -67,7 +69,8 @@ async function saveToStorageOrRemoveOnNull<K extends keyof typeof defaultConfig>
 
 export {
   config,
+  configInitialized,
   defaultConfig,
   loadConfigFromStorage,
-  setConfigOverride,
+  setConfigOverride
 };
