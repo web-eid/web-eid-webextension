@@ -160,6 +160,13 @@ const targets = {
     );
     await zip("./dist/firefox", "./dist/firefox.zip", sourceDateEpoch.date);
     await zip("./dist/chrome", "./dist/chrome.zip", sourceDateEpoch.date);
+  },
+
+  async validate() {
+    rem(
+      "Validating the Firefox package with Mozilla addons-linter"
+    );
+    await exec("addons-linter", ["--warnings-as-errors", "./dist/firefox.zip"]);
   }
 };
 

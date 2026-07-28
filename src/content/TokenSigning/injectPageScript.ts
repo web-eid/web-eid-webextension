@@ -33,7 +33,7 @@ export default function injectPageScript(): void {
     if (browser.runtime.getManifest()["manifest_version"] >= 3) {
       s.src = browser.runtime.getURL("token-signing-page-script.js");
     } else {
-      s.innerHTML = "(" + pageScript + ")();";
+      s.textContent = "(" + pageScript + ")();";
     }
 
     (document.head || document.documentElement).appendChild(s);
