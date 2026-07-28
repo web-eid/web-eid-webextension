@@ -29,23 +29,23 @@ The Web eID extension for Safari is built as a [Safari web extension](https://de
 
 4. Build the project with zip packages
     ```bash
-    npm run clean build package
+    npm run clean build package validate
     ```
 
     For reproducible builds, set the `SOURCE_DATE_EPOCH` environment variable.  
     See [https://reproducible-builds.org/docs/source-date-epoch](https://reproducible-builds.org/docs/source-date-epoch) for details.
     ```bash
-    SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct) npm run clean build package
+    SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct) npm run clean build package validate
     ```
 
     Alternatively, for reproducible builds, the `SOURCE_DATE_EPOCH` value can be taken from the `SOURCE_DATE_EPOCH` file of a previous build.
     ```bash
-    SOURCE_DATE_EPOCH=$(cat ../previous-build/dist/firefox/SOURCE_DATE_EPOCH) npm run clean build package
+    SOURCE_DATE_EPOCH=$(cat ../previous-build/dist/firefox/SOURCE_DATE_EPOCH) npm run clean build package validate
     ```
 
     For backwards compatibility with TokenSigning API, set the `TOKEN_SIGNING_BACKWARDS_COMPATIBILITY` environment variable to `true`.
     ```bash
-    TOKEN_SIGNING_BACKWARDS_COMPATIBILITY=true npm run clean build package
+    TOKEN_SIGNING_BACKWARDS_COMPATIBILITY=true npm run clean build package validate
     ```
 
 5. Load in Firefox as a Temporary Extension
