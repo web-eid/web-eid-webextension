@@ -5,7 +5,7 @@ import { spawn } from "child_process";
 import path from "path";
 
 import fs from "fs-extra"
-import archiver from "archiver";
+import { ZipArchive } from "archiver";
 import { glob } from 'glob';
 
 const isWindows = /^win/.test(process.platform);
@@ -71,7 +71,7 @@ export async function zip(source, destination, date) {
 
   return await new Promise((resolve, reject) => {
     const output  = fs.createWriteStream(path.resolve(destination));
-    const archive = archiver("zip");
+    const archive = new ZipArchive();
 
     output.on("close", function() {
       resolve();

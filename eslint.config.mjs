@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 
 // @ts-check
-import globals from "globals";
 import eslint from "@eslint/js";
+import globals from "globals";
+import stylistic from "@stylistic/eslint-plugin";
 import tseslint from "typescript-eslint";
-import stylisticTs from '@stylistic/eslint-plugin-ts';
 
 export default tseslint.config(
   {
@@ -25,7 +25,7 @@ export default tseslint.config(
     ],
 
     plugins: {
-      '@stylistic/ts': stylisticTs,
+      '@stylistic/ts': stylistic,
       '@typescript-eslint': tseslint.plugin,
     },
 
@@ -55,9 +55,9 @@ export default tseslint.config(
       "@stylistic/ts/semi": "error",
 
       "@typescript-eslint/array-type": ["error", { default: "generic" }],
-      
+
       // The following rules override the default "error" setting.
-      // These cases should be investigated and the overrides 
+      // These cases should be investigated and the overrides
       // should either be removed or set to "off".
       "@typescript-eslint/no-explicit-any":              "warn",
       "@typescript-eslint/no-floating-promises":         "warn",
