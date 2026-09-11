@@ -8,25 +8,25 @@ const ui = {
 
 };
 
+const devToolsEnabledStorageKey = "devtoolsEnabled";
+
 (async () => {
-  if (await browser.permissions.contains({ permissions: ["storage"] })) {
-    const { devtoolsEnabled } = await browser.storage.local.get(["devtoolsEnabled"]);
+  if (await isStorageEnabled()) {
+    const { devtoolsEnabled } = await browser.storage.local.get([devToolsEnabledStorageKey]);
 
     ui.devtools.checked = Boolean(devtoolsEnabled);
   }
 })();
 
 ui.devtools.addEventListener("change", async () => {
-  const hasStoragePermission = await browser.permissions.request({
-    permissions: ["storage"]
-  });
+  const hasStoragePermission = await ensureStorageCanBeUsed();
 
   if (!hasStoragePermission) {
     ui.storageNotAllowed.style.display = 'block';
   } else {
     ui.storageNotAllowed.style.display = 'none';
 
-    browser.storage.local.set({ devtoolsEnabled: ui.devtools.checked });
+    await browser.storage.local.set({ [devToolsEnabledStorageKey]: ui.devtools.checked });
 
     ui.openDevToolsAgain.style.display = (
       ui.devtools.checked
@@ -35,3 +35,32 @@ ui.devtools.addEventListener("change", async () => {
     );
   }
 });
+
+async function isStorageEnabled() {
+  return isStorageDeclaredAsRequiredPermission() || (
+    canRequestStoragePermission() &&
+    await browser.permissions.contains({ permissions: ["storage"] })
+  );
+}
+
+async function ensureStorageCanBeUsed() {
+  if (isStorageDeclaredAsRequiredPermission()) {
+    return true;
+  }
+
+  if (canRequestStoragePermission()) {
+    return await browser.permissions.request({
+      permissions: ["storage"]
+    });
+  }
+
+  return false;
+}
+
+function isStorageDeclaredAsRequiredPermission() {
+  return Boolean(browser.runtime.getManifest().permissions?.includes("storage"));
+}
+
+function canRequestStoragePermission() {
+  return Boolean(browser.runtime.getManifest().optional_permissions?.includes("storage"));
+}

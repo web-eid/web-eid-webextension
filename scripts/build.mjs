@@ -114,7 +114,7 @@ const targets = {
     );
     await cp("./static/icons", "./dist/chrome/icons");
     await cp("./static/icons", "./dist/firefox/icons");
-    await cp("./static/icons", "./dist/safari");
+    await cp("./static/icons", "./dist/safari/icons");
 
     rem(
       "Copying static pages to Firefox dist directory"

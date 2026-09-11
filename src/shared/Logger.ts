@@ -63,13 +63,15 @@ export default class Logger {
   }
 
   async isDevToolsEnabled(): Promise<boolean> {
-    const manifest                             = browser.runtime.getManifest();
-    const isOptionalPermissionDevToolsTurnedOn = Boolean(manifest.optional_permissions?.includes("devtools"));
+    return await this.isOptionalPermissionDevToolsEnabled()
+      || await this.isOptionsPageDevToolsToggleEnabled();
+  }
 
-    if (isOptionalPermissionDevToolsTurnedOn) {
-      return true;
-    }
+  private async isOptionalPermissionDevToolsEnabled(): Promise<boolean> {
+    return await browser.permissions.contains({ permissions: ["devtools"] });
+  }
 
+  private async isOptionsPageDevToolsToggleEnabled(): Promise<boolean> {
     const isStorageEnabled = await isBrowserStorageEnabled();
 
     if (isStorageEnabled) {
