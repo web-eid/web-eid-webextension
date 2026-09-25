@@ -42,6 +42,16 @@ async function loadConfigFromStorage() {
   }
 }
 
+async function restoreConfigToDefault() {
+  try {
+    for (const key of overrideableConfigKeys) {
+      setConfigValueOrResetToDefaultOnNull(key, null);
+    }
+  } catch (error) {
+    console.error("Failed to load configuration from storage:", error);
+  }
+}
+
 function isValidConfigValue<K extends keyof typeof defaultConfig>(key: K, value: unknown): value is typeof defaultConfig[K] {
   return typeof value === typeof defaultConfig[key];
 }
@@ -69,5 +79,6 @@ export {
   config,
   defaultConfig,
   loadConfigFromStorage,
+  restoreConfigToDefault,
   setConfigOverride,
 };
