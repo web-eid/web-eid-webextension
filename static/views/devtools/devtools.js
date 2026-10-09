@@ -2,22 +2,7 @@
 // SPDX-FileCopyrightText: Estonian Information System Authority
 
 async function isDevToolsEnabled() {
-  const isOptionalPermissionDevToolsTurnedOn = Boolean(browser.runtime.getManifest().optional_permissions?.includes("devtools"));
-
-  if (isOptionalPermissionDevToolsTurnedOn) {
-    return true;
-  }
-
-  const isStorageOptional    = Boolean(browser.runtime.getManifest().optional_permissions?.includes("storage"));
-  const hasStoragePermission = await browser.permissions.contains({ permissions: ["storage"] });
-
-  if (isStorageOptional && hasStoragePermission) {
-    const { devtoolsEnabled } = await browser.storage.local.get(["devtoolsEnabled"]);
-
-    return Boolean(devtoolsEnabled);
-  }
-
-  return false;
+  return isOptionalPermissionDevToolsEnabled() || await isOptionsPageDevToolsToggleEnabled();
 }
 
 (async () => {
@@ -29,3 +14,50 @@ async function isDevToolsEnabled() {
     );
   }
 })();
+
+function isOptionalPermissionDevToolsEnabled() {
+  return Boolean(browser.runtime.getManifest().optional_permissions?.includes("devtools"));
+}
+
+async function isOptionsPageDevToolsToggleEnabled() {
+  if(browser.runtime.getURL('').startsWith('safari-web-extension://')) {
+    return isOptionsPageDevToolsToggleEnabledInSafari();
+  }
+
+  const isStorageEnabled = await isBrowserStorageEnabled();
+  if (isStorageEnabled) {
+    const { devtoolsEnabled } = await browser.storage.local.get(["devtoolsEnabled"]);
+
+    return Boolean(devtoolsEnabled);
+  }
+
+  return false;
+}
+
+async function isBrowserStorageEnabled() {
+  const manifest                                = browser.runtime.getManifest();
+  const isStorageDeclaredAsRequiredPermission   = Boolean(manifest.permissions?.includes("storage"));
+
+  if (isStorageDeclaredAsRequiredPermission) {
+    return true;
+  }
+
+  const canRequestStoragePermission = Boolean(manifest.optional_permissions?.includes("storage"));
+
+  if (canRequestStoragePermission) {
+    return await browser.permissions.contains({ permissions: ["storage"] });
+  }
+
+  return false;
+}
+
+async function isOptionsPageDevToolsToggleEnabledInSafari() {
+  try {
+    const { devtoolsEnabled } = await browser.storage.local.get(["devtoolsEnabled"]);
+
+    return Boolean(devtoolsEnabled);
+  } catch {
+    return false;
+  }
+}
+

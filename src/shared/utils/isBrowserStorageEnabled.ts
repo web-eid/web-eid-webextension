@@ -7,19 +7,18 @@
  * @returns true if storage is a required permission, or if optional storage has been granted by the user
  */
 export default async function isBrowserStorageEnabled() {
-  const manifest          = browser.runtime.getManifest();
-  const isStorageRequired = Boolean(manifest.permissions?.includes("storage"));
+  const manifest                                = browser.runtime.getManifest();
+  const isStorageDeclaredAsRequiredPermission   = Boolean(manifest.permissions?.includes("storage"));
 
-  if (isStorageRequired) {
+  if (isStorageDeclaredAsRequiredPermission) {
     return true;
   }
 
-  const isStorageOptional = Boolean(manifest.optional_permissions?.includes("storage"));
+  const canRequestStoragePermission = Boolean(manifest.optional_permissions?.includes("storage"));
 
-  if (!isStorageOptional) {
-    return false;
+  if (canRequestStoragePermission) {
+    return await browser.permissions.contains({ permissions: ["storage"] });
   }
 
-  const hasStoragePermission = await browser.permissions.contains({ permissions: ["storage"] });
-  return hasStoragePermission;
+  return false;
 }

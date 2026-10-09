@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Estonian Information System Authority
 // SPDX-License-Identifier: MIT
 
-import { config, defaultConfig, loadConfigFromStorage, setConfigOverride } from "./configManager";
+import { config, defaultConfig, loadConfigFromStorage, restoreConfigToDefault, setConfigOverride } from "./configManager";
 import { Port } from "../models/Browser/Runtime";
 
 class DevToolsBridge extends EventTarget {
@@ -37,6 +37,7 @@ class DevToolsBridge extends EventTarget {
 
     port.onDisconnect.addListener(() => {
       this.devToolPorts = this.devToolPorts.filter((connectedPort) => connectedPort !== port);
+      restoreConfigToDefault();
     });
 
     await loadConfigFromStorage();
