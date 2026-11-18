@@ -14,9 +14,6 @@ import sign from "./actions/sign";
 import status from "./actions/status";
 
 import Logger from "../shared/Logger";
-import { loadConfigFromStorage } from "../shared/configManager";
-
-const configLoaded = loadConfigFromStorage();
 
 async function onAction(message: ExtensionRequest, sender: MessageSender): Promise<void | object> {
   switch (message.action) {
@@ -102,10 +99,9 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Fire-and-forget: DevTools logging must not block message handling, using void to ignore Promise is the standard solution.
     void logger.devToolsEvent("request", "Extension (content)", "Extension (background)", message);
 
-    void configLoaded
-      .then(() => onAction(message, sender))
+    void onAction(message, sender)
       .then((response) => {
-        void logger.devToolsEvent("response", "Extension (content)", "Extension (background)", response);
+        logger.devToolsEvent("response", "Extension (content)", "Extension (background)", response);
 
         return response;
       })
@@ -117,8 +113,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if ((message as TokenSigningMessage).type) {
     void logger.devToolsEvent("request", "Extension (content)", "Extension (background)", message);
 
-    void configLoaded
-      .then(() => onTokenSigningAction(message, sender))
+    void onTokenSigningAction(message, sender)
       .then((response) => {
         void logger.devToolsEvent("response", "Extension (content)", "Extension (background)", response);
 
